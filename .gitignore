@@ -35,6 +35,7 @@ desktop.ini
 # Environment Variables
 # ========================
 .env
+.env.local
 .env.*
 !.env.example
 
