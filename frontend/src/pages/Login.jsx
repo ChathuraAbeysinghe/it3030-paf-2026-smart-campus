@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const SLIIT_EMAIL_REGEX = /^[A-Z]{2}\d{8}@my\.sliit\.lk$/i;
+// Students: IT12345678@my.sliit.lk  |  Staff/Admin/Tech: admin@sliit.lk
+const SLIIT_EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(my\.)?sliit\.lk$/i;
 
 export default function Login() {
   const { loginWithGoogle, loginManual } = useAuth();
@@ -19,7 +20,7 @@ export default function Login() {
     const errs = {};
     if (!email.trim()) errs.email = 'Email is required';
     else if (!SLIIT_EMAIL_REGEX.test(email.trim()))
-      errs.email = 'Use your SLIIT email (AB********@my.sliit.lk)';
+      errs.email = 'Enter a valid SLIIT email (@sliit.lk or @my.sliit.lk)';
     if (!password) errs.password = 'Password is required';
     return errs;
   };
@@ -43,7 +44,7 @@ export default function Login() {
     }
   };
 
-  const isFormValid = email.trim() && password && SLIIT_EMAIL_REGEX.test(email.trim());
+  const isFormValid = email.trim() && password;
 
   return (
     <div className="page-center">
@@ -79,14 +80,14 @@ export default function Login() {
                 id="login-email"
                 type="email"
                 className="form-input"
-                placeholder="AB12345678@my.sliit.lk"
+                placeholder="your.email@sliit.lk"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})); }}
                 autoComplete="email"
               />
             </div>
             {errors.email && <span className="form-error">{errors.email}</span>}
-            <span className="form-hint">Use your SLIIT email (AB********@my.sliit.lk)</span>
+            <span className="form-hint">Use your SLIIT email (@sliit.lk or @my.sliit.lk)</span>
           </div>
 
           <div className="form-group">
@@ -117,7 +118,7 @@ export default function Login() {
           <button
             type="submit"
             className="btn-primary btn-glow"
-            disabled={isLoading}
+            disabled={isLoading || !isFormValid}
             style={{ marginTop: '8px' }}
           >
             {isLoading ? (
