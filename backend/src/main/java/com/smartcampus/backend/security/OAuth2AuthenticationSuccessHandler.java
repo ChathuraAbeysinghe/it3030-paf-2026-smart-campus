@@ -37,7 +37,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            // Redirect to frontend OAuth callback — frontend will call /api/user/me
             targetUrl = switch (user.getRole()) {
                 case ADMIN       -> frontendUrl + "/oauth-callback?role=ADMIN";
                 case TECHNICIAN  -> frontendUrl + "/oauth-callback?role=TECHNICIAN";

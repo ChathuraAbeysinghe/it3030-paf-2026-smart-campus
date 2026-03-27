@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Value("${app.admin-emails:}")
     private String adminEmailsConfig;
 
+    private static final String SLIIT_DOMAIN = "@my.sliit.lk";
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
@@ -33,6 +36,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email   = (String) attributes.get("email");
         String name    = (String) attributes.get("name");
         String picture = (String) attributes.get("picture");
+
+        // ── SLIIT Campus Email Validation ──
+        if (email == null || !email.toLowerCase().endsWith(SLIIT_DOMAIN)) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("invalid_email", "Access restricted to SLIIT students only", null),
+                "Access restricted to SLIIT students only. Please use your @my.sliit.lk email."
+            );
+        }
 
         // Admin email list from config
         List<String> adminEmails = adminEmailsConfig.isBlank()

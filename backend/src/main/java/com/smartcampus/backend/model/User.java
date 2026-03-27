@@ -7,6 +7,7 @@ import lombok.Builder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +23,13 @@ public class User {
 
     @Indexed(unique = true)
     private String email;
+
+    @JsonIgnore
+    private String password;
+
+    private String itNumber;
+    
+    private String faculty;
 
     private String picture;
 
