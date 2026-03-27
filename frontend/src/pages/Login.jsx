@@ -1,76 +1,154 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const SLIIT_EMAIL_REGEX = /^[A-Z]{2}\d{8}@my\.sliit\.lk$/i;
+
 export default function Login() {
-  const { login } = useAuth();
+  const { loginWithGoogle, loginManual } = useAuth();
+  const navigate = useNavigate();
+
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors]     = useState({});
+  const [apiError, setApiError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validate = () => {
+    const errs = {};
+    if (!email.trim()) errs.email = 'Email is required';
+    else if (!SLIIT_EMAIL_REGEX.test(email.trim()))
+      errs.email = 'Use your SLIIT email (AB********@my.sliit.lk)';
+    if (!password) errs.password = 'Password is required';
+    return errs;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setApiError('');
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setIsLoading(true);
+    try {
+      const user = await loginManual(email.trim(), password);
+      const routes = { ADMIN: '/admin/dashboard', TECHNICIAN: '/technician/dashboard', USER: '/dashboard' };
+      navigate(routes[user.role] ?? '/dashboard', { replace: true });
+    } catch (err) {
+      setApiError(err.response?.data?.error || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isFormValid = email.trim() && password && SLIIT_EMAIL_REGEX.test(email.trim());
 
   return (
     <div className="page-center">
-      <div className="glass-card animate-in" style={{
-        width: '100%',
-        maxWidth: '420px',
-        padding: '48px 40px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Decorative glow blob */}
-        <div style={{
-          position: 'absolute',
-          top: '-60px',
-          right: '-60px',
-          width: '200px',
-          height: '200px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0,173,181,0.18) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
+      <div className="glass-card animate-in auth-card">
+        {/* Decorative blobs */}
+        <div className="auth-blob auth-blob--top" />
+        <div className="auth-blob auth-blob--bottom" />
 
-        {/* Logo / Icon */}
-        <div style={{
-          width: '72px',
-          height: '72px',
-          borderRadius: '20px',
-          background: 'linear-gradient(135deg, rgba(0,173,181,0.25), rgba(0,173,181,0.05))',
-          border: '1px solid rgba(0,173,181,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 28px',
-          fontSize: '2rem',
-          backdropFilter: 'blur(10px)',
-        }}>
-          <img src="/sliit-campus-logo-.png" alt="SLIIT" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+        {/* Logo */}
+        <div className="auth-logo">
+          <img src="/sliit-campus-logo-.png" alt="SLIIT" className="auth-logo-img" />
         </div>
 
-        <h1 style={{ fontSize: '1.6rem', marginBottom: '8px', color: 'var(--text)' }}>
-          Smart Campus
-        </h1>
-        <h2 style={{
-          fontSize: '1rem',
-          fontWeight: 400,
-          color: 'var(--primary)',
-          marginBottom: '8px',
-          letterSpacing: '0.5px',
-        }}>
-          Operations Hub
-        </h2>
-        <p style={{ fontSize: '0.875rem', marginBottom: '36px', color: 'var(--text-muted)' }}>
-          Sign in to access your workspace
-        </p>
+        <h1 className="auth-title">Smart Campus</h1>
+        <h2 className="auth-subtitle">Operations Hub</h2>
+        <p className="auth-desc">Sign in to access your workspace</p>
 
-        <hr className="divider" />
+        {/* Error toast */}
+        {apiError && (
+          <div className="auth-toast auth-toast--error animate-in">
+            <span className="auth-toast-icon">⚠️</span>
+            {apiError}
+          </div>
+        )}
 
-        <button className="btn-primary" onClick={login} style={{ marginTop: '24px' }}>
+        {/* Manual Login Form */}
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-email">Campus Email</label>
+            <div className={`form-input-wrapper ${errors.email ? 'form-input--error' : ''}`}>
+              <span className="form-input-icon">📧</span>
+              <input
+                id="login-email"
+                type="email"
+                className="form-input"
+                placeholder="AB12345678@my.sliit.lk"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})); }}
+                autoComplete="email"
+              />
+            </div>
+            {errors.email && <span className="form-error">{errors.email}</span>}
+            <span className="form-hint">Use your SLIIT email (AB********@my.sliit.lk)</span>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-password">Password</label>
+            <div className={`form-input-wrapper ${errors.password ? 'form-input--error' : ''}`}>
+              <span className="form-input-icon">🔒</span>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})); }}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="form-input-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+            {errors.password && <span className="form-error">{errors.password}</span>}
+          </div>
+
+          <button
+            type="submit"
+            className="btn-primary btn-glow"
+            disabled={isLoading}
+            style={{ marginTop: '8px' }}
+          >
+            {isLoading ? (
+              <>
+                <span className="btn-spinner" />
+                Signing in…
+              </>
+            ) : (
+              <>🚀 Sign In</>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
+
+        {/* Google Login */}
+        <button className="btn-google" onClick={loginWithGoogle}>
           <GoogleIcon />
           Continue with Google
         </button>
 
-        <p style={{
-          fontSize: '0.72rem',
-          color: 'var(--text-muted)',
-          marginTop: '24px',
-          lineHeight: 1.6,
-        }}>
+        {/* Register Link */}
+        <p className="auth-footer">
+          Don't have an account?{' '}
+          <Link to="/register" className="auth-link">Create account</Link>
+        </p>
+
+        <p className="auth-terms">
           By signing in, you agree to the Smart Campus
           <br />terms of use and privacy policy.
         </p>

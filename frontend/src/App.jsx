@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth }  from './context/AuthContext';
 import ProtectedRoute             from './components/ProtectedRoute';
 import Login                      from './pages/Login';
+import Register                   from './pages/Register';
 import OAuthCallback              from './pages/OAuthCallback';
 import Dashboard                  from './pages/Dashboard';
 import AdminDashboard             from './pages/AdminDashboard';
@@ -31,6 +32,7 @@ export default function App() {
           {/* Public */}
           <Route path="/"              element={<RootRedirect />} />
           <Route path="/login"         element={<Login />} />
+          <Route path="/register"      element={<Register />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
 
           {/* USER */}
