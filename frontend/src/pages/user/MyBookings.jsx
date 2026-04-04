@@ -1,34 +1,84 @@
 import { useState, useEffect } from 'react';
-import { bookingService } from '../../services/api';
+import { bookingService, resourceService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import QRCheckin from '../../components/QRCheckin';
 import GlassModal from '../../components/GlassModal';
+import BookingForm from '../../components/BookingForm';
 
 /**
  * My Bookings — booking list with status, QR check-in, and cancel.
  */
 export default function MyBookings() {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [resources, setResources] = useState([]);
   const [qrModal, setQrModal] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    (async () => {
-      const data = await bookingService.getAll();
-      setBookings(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    })();
+    loadData();
   }, []);
 
+  const loadData = async () => {
+    try {
+      const [bookingRows, resourceRows] = await Promise.all([
+        user?.id ? bookingService.getByUser(user.id) : bookingService.getAll(),
+        resourceService.getAll(),
+      ]);
+
+      setBookings(bookingRows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      setResources(resourceRows || []);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to load bookings');
+    }
+  };
+
+  const handleBookingSaved = (saved, actionType) => {
+    setBookings(prev => {
+      const exists = prev.some(b => b.id === saved.id);
+      const next = exists
+        ? prev.map(b => (b.id === saved.id ? saved : b))
+        : [saved, ...prev];
+      return next.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    });
+
+    if (actionType === 'updated') {
+      setEditingBooking(null);
+    }
+  };
+
   const handleCancel = async (id) => {
-    await bookingService.updateStatus(id, 'CANCELLED');
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b));
+    try {
+      const updated = await bookingService.cancel(id);
+      setBookings(prev => prev.map(b => b.id === id ? updated : b));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to cancel booking');
+    }
   };
 
   return (
     <div className="page-content animate-in">
       <div className="content-header">
         <h1>My Bookings</h1>
-        <p>Track and manage your resource bookings.</p>
+        <p>Create, edit, and manage your booking requests.</p>
       </div>
+
+      {error && (
+        <div className="glass-card" style={{ marginBottom: 14, color: '#F87171', border: '1px solid rgba(248,113,113,0.35)' }}>
+          {error}
+        </div>
+      )}
+
+      <BookingForm
+        resources={resources}
+        initialBooking={editingBooking}
+        onSaved={handleBookingSaved}
+        onCancelEdit={() => setEditingBooking(null)}
+      />
 
       <div className="booking-list">
         {bookings.length === 0 && (
@@ -47,10 +97,12 @@ export default function MyBookings() {
               </div>
             </div>
             <div className="booking-card-body">
-              <h3>{b.resourceName}</h3>
+              <h3>{b.facilityName || b.resourceName || b.facilityId}</h3>
               <div className="booking-meta">
                 <span>🕐 {b.startTime} — {b.endTime}</span>
                 <span>📋 {b.purpose}</span>
+                <span>👥 {b.expectedAttendees || '-'} attendees</span>
+                {b.adminNotes ? <span>📝 {b.adminNotes}</span> : null}
               </div>
             </div>
             <div className="booking-card-right">
@@ -60,7 +112,13 @@ export default function MyBookings() {
                   <button className="btn-sm btn-sm--primary" onClick={() => setQrModal(b)}>📱 QR Check-in</button>
                 )}
                 {b.status === 'PENDING' && (
+                  <button className="btn-sm" onClick={() => setEditingBooking(b)}>Edit</button>
+                )}
+                {b.status === 'APPROVED' && (
                   <button className="btn-sm btn-sm--danger" onClick={() => handleCancel(b.id)}>Cancel</button>
+                )}
+                {b.status === 'PENDING' && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Awaiting admin review</span>
                 )}
               </div>
             </div>

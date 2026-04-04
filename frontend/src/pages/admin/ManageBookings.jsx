@@ -1,65 +1,86 @@
 import { useState, useEffect } from 'react';
 import { bookingService } from '../../services/api';
-import GlassTable from '../../components/GlassTable';
-import StatusBadge from '../../components/StatusBadge';
+import AllBookings from '../../components/AllBookings';
+import BookingApprovalPanel from '../../components/BookingApprovalPanel';
 
 /**
  * Admin — Manage Bookings (approve/reject).
  */
 export default function ManageBookings() {
   const [bookings, setBookings] = useState([]);
-  const [filter, setFilter] = useState('ALL');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { load(); }, []);
+
   const load = async () => {
-    const data = await bookingService.getAll();
-    setBookings(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    setLoading(true);
+    try {
+      const data = await bookingService.getAll();
+      setBookings(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to load bookings');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStatus = async (id, status) => {
-    await bookingService.updateStatus(id, status);
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status, qrCode: status === 'APPROVED' ? 'QR-' + id : b.qrCode } : b));
+  const replaceBooking = (updated) => {
+    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b));
   };
 
-  const filtered = filter === 'ALL' ? bookings : bookings.filter(b => b.status === filter);
+  const handleApprove = async (id, notes) => {
+    const updated = await bookingService.approve(id, notes || 'Approved by admin');
+    replaceBooking(updated);
+  };
 
-  const columns = [
-    { key: 'resourceName', label: 'Resource' },
-    { key: 'userName', label: 'Requested By' },
-    { key: 'date', label: 'Date' },
-    { key: 'startTime', label: 'Time', render: (v, row) => `${v} — ${row.endTime}` },
-    { key: 'purpose', label: 'Purpose', render: (v) => <span style={{ maxWidth: 200, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</span> },
-    { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
-  ];
+  const handleReject = async (id, reason) => {
+    const updated = await bookingService.reject(id, reason);
+    replaceBooking(updated);
+  };
+
+  const handleCancel = async (id) => {
+    const updated = await bookingService.cancel(id);
+    replaceBooking(updated);
+  };
+
+  const pendingBookings = bookings.filter(b => b.status === 'PENDING');
 
   return (
     <div className="animate-in">
       <div className="content-header">
         <h1>Manage Bookings</h1>
-        <p>Review and process booking requests.</p>
+        <p>Review all booking requests and process pending approvals.</p>
       </div>
 
-      {/* Filters */}
-      <div className="filter-chips" style={{ marginBottom: 20 }}>
-        {['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map(s => (
-          <button key={s} className={`filter-chip ${filter === s ? 'filter-chip--active' : ''}`} onClick={() => setFilter(s)}>
-            {s === 'ALL' ? 'All' : s}
-          </button>
-        ))}
-      </div>
+      {error && (
+        <div className="glass-card" style={{ marginBottom: 14, color: '#F87171', border: '1px solid rgba(248,113,113,0.35)' }}>
+          {error}
+        </div>
+      )}
 
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <GlassTable
-          columns={columns}
-          data={filtered}
-          actions={(row) => row.status === 'PENDING' ? (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="btn-sm btn-sm--success" onClick={() => handleStatus(row.id, 'APPROVED')}>✅ Approve</button>
-              <button className="btn-sm btn-sm--danger" onClick={() => handleStatus(row.id, 'REJECTED')}>❌ Reject</button>
-            </div>
-          ) : null}
-          emptyMessage="No bookings found"
-        />
+      {loading ? (
+        <div className="glass-card" style={{ color: 'var(--text-muted)' }}>Loading bookings...</div>
+      ) : (
+        <div style={{ display: 'grid', gap: 16 }}>
+          <BookingApprovalPanel
+            pendingBookings={pendingBookings}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+
+          <AllBookings
+            bookings={bookings}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onCancel={handleCancel}
+          />
+        </div>
+      )}
+
+      <div style={{ marginTop: 12 }}>
+        <button className="btn-sm" onClick={load}>Refresh</button>
       </div>
     </div>
   );
