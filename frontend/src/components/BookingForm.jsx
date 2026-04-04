@@ -198,6 +198,8 @@ export default function BookingForm({
             startTime={form.startTime}
             endTime={form.endTime}
             excludeBookingId={initialBooking ? initialBooking.id : null}
+            selectedDate={form.date}
+            onDateSelect={function (dateValue) { onChange('date', dateValue); }}
           />
         )}
 
