@@ -93,6 +93,8 @@ export default function AvailabilityChecker({
     return hasOverlap(startTime, endTime, b.startTime, b.endTime);
   });
 
+  var hasBookingsOnSelectedDate = bookedSlots.length > 0;
+
   var selectedDateLabel = selectedDate
     ? new Date(selectedDate + 'T00:00:00').toLocaleDateString()
     : 'No date selected';
@@ -151,6 +153,22 @@ export default function AvailabilityChecker({
         <p style={{ marginTop: 10, marginBottom: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
           Selected Date: {selectedDateLabel}
         </p>
+
+        {selectedDate ? (
+          hasBookingsOnSelectedDate ? (
+            <div style={{ marginTop: 8, color: '#FBBF24', fontSize: '0.82rem' }}>
+              Booking(s) found for selected date.
+            </div>
+          ) : (
+            <div style={{ marginTop: 8, color: '#34D399', fontSize: '0.82rem' }}>
+              No bookings found for selected date.
+            </div>
+          )
+        ) : (
+          <div style={{ marginTop: 8, color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+            Select a date to check booking availability and time periods.
+          </div>
+        )}
       </div>
 
       {!startTime || !endTime ? (
@@ -171,30 +189,35 @@ export default function AvailabilityChecker({
         {bookedSlots.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>No existing bookings for this date.</p>
         ) : (
-          bookedSlots.map(function (booking) {
-            return (
-              <div
-                key={booking.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 10,
-                  padding: '8px 10px',
-                }}
-              >
-                <div style={{ display: 'grid', gap: 2 }}>
-                  <strong style={{ fontSize: '0.9rem' }}>{booking.startTime} - {booking.endTime}</strong>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {booking.userName || 'Unknown User'}
-                  </span>
+          <>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Booked Time Periods:
+            </p>
+            {bookedSlots.map(function (booking) {
+              return (
+                <div
+                  key={booking.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 10,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 10,
+                    padding: '8px 10px',
+                  }}
+                >
+                  <div style={{ display: 'grid', gap: 2 }}>
+                    <strong style={{ fontSize: '0.9rem' }}>{booking.startTime} - {booking.endTime}</strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {booking.userName || 'Unknown User'}
+                    </span>
+                  </div>
+                  <StatusBadge status={booking.status} />
                 </div>
-                <StatusBadge status={booking.status} />
-              </div>
-            );
-          })
+              );
+            })}
+          </>
         )}
       </div>
     </div>
