@@ -37,6 +37,9 @@ public class BookingController {
     private final BookingService bookingService;
     private final CurrentUserService currentUserService;
 
+    /*
+     Get all bookings Admins see all bookings, users see only their own
+     */
     @GetMapping
     public List<BookingResponse> getAll(
             @AuthenticationPrincipal OAuth2User principal,
@@ -48,6 +51,9 @@ public class BookingController {
         return bookingService.getBookings(actor, bookingStatus);
     }
 
+    /*
+     Retrieve a specific booking by ID
+     */
     @GetMapping("/{id}")
     public BookingResponse getById(
             @PathVariable String id,
@@ -58,6 +64,9 @@ public class BookingController {
         return bookingService.getById(actor, id);
     }
 
+    /*
+     Create a new booking
+     */
     @PostMapping
     public ResponseEntity<BookingResponse> create(
             @Valid @RequestBody BookingRequest body,
@@ -69,6 +78,9 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    /*
+     Update an existing PENDING booking, owner and admin can
+     */
     @PutMapping("/{id}")
     public BookingResponse update(
             @PathVariable String id,
@@ -80,6 +92,9 @@ public class BookingController {
         return bookingService.update(actor, id, body);
     }
 
+    /*
+     Approve a PENDING booking admin-only
+     */
     @PatchMapping("/{id}/approve")
     public BookingResponse approve(
             @PathVariable String id,
@@ -92,6 +107,9 @@ public class BookingController {
         return bookingService.approve(actor, id, adminNotes);
     }
 
+    /**
+     * Reject a PENDING booking admin-only
+     */
     @PatchMapping("/{id}/reject")
     public BookingResponse reject(
             @PathVariable String id,
@@ -103,6 +121,9 @@ public class BookingController {
         return bookingService.reject(actor, id, body.getAdminNotes());
     }
 
+    /**
+     Cancel an APPROVED booking owner only
+     */
     @PatchMapping("/{id}/cancel")
     public BookingResponse cancel(
             @PathVariable String id,
