@@ -18,7 +18,7 @@ import java.time.LocalTime;
 @Document(collection = "bookings")
 
 public class Booking {
-    
+
     @Id
     private String id;
 
