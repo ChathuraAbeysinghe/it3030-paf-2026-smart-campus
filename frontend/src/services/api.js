@@ -3,43 +3,65 @@
  * Each service tries the real backend API first; if it fails, returns mock data.
  */
 import { api } from '../context/AuthContext';
-import { mockResources } from '../mock/resources';
 import { mockBookings } from '../mock/bookings';
 import { mockTickets } from '../mock/tickets';
 import { mockUsers, mockTechnicians } from '../mock/users';
 import { mockNotifications } from '../mock/notifications';
 
-// ── Resource Service ──────────────────────────────────────
+function getApiErrorMessage(error, fallbackMessage) {
+  if (error && error.response && error.response.data && error.response.data.error) {
+    return error.response.data.error;
+  }
+  return fallbackMessage;
+}
+
+// Resource Service
 export const resourceService = {
-  getAll: async (filters = {}) => {
+  getAll: async function (filters) {
+    var safeFilters = filters || {};
     try {
-      const { data } = await api.get('/api/resources', { params: filters });
-      return data;
-    } catch {
-      let results = [...mockResources];
-      if (filters.type && filters.type !== 'ALL') results = results.filter(r => r.type === filters.type);
-      if (filters.search) results = results.filter(r => r.name.toLowerCase().includes(filters.search.toLowerCase()));
-      return results;
+      var response = await api.get('/api/resources', { params: safeFilters });
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to load resources'));
     }
   },
-  getById: async (id) => {
-    try { return (await api.get(`/api/resources/${id}`)).data; }
-    catch { return mockResources.find(r => r.id === id); }
-  },
-  create: async (data) => {
-    try { return (await api.post('/api/resources', data)).data; }
-    catch { const nr = { ...data, id: 'r' + Date.now() }; mockResources.push(nr); return nr; }
-  },
-  update: async (id, data) => {
-    try { return (await api.put(`/api/resources/${id}`, data)).data; }
-    catch { const i = mockResources.findIndex(r => r.id === id); if (i >= 0) mockResources[i] = { ...mockResources[i], ...data }; return mockResources[i]; }
-  },
-  delete: async (id) => {
-    try { await api.delete(`/api/resources/${id}`); }
-    catch { const i = mockResources.findIndex(r => r.id === id); if (i >= 0) mockResources.splice(i, 1); }
-  },
-};
 
+  getById: async function (id) {
+    try {
+      var response = await api.get('/api/resources/' + id);
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to load resource'));
+    }
+  },
+
+  create: async function (data) {
+    try {
+      var response = await api.post('/api/resources', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to create resource'));
+    }
+  },
+
+  update: async function (id, data) {
+    try {
+      var response = await api.put('/api/resources/' + id, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to update resource'));
+    }
+  },
+
+  delete: async function (id) {
+    try {
+      await api.delete('/api/resources/' + id);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to delete resource'));
+    }
+  }
+};
 // ── Booking Service ──────────────────────────────────────
 export const bookingService = {
   getAll: async () => {
