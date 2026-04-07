@@ -40,6 +40,11 @@ desktop.ini
 !.env.example
 
 # ========================
+# Local Secret Config
+# ========================
+backend/src/main/resources/application-local.properties
+
+# ========================
 # Node / Frontend 
 # ========================
 node_modules/
