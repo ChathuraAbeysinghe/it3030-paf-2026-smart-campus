@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -45,10 +47,19 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/oauth2/**",
                     "/login/**",
-                    "/api/auth/**"
+                    "/error",
+                    "/api/auth/**",
+                    "/api/resources",
+                    "/api/resources/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
+
+            .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
+                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                new AntPathRequestMatcher("/api/**")
+            ))
+
             // API calls should get 401 instead of OAuth redirect, so XHR won't hit Google and fail CORS.
             .exceptionHandling(ex -> ex
                 .defaultAuthenticationEntryPointFor(
@@ -56,6 +67,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/api/**")
                 )
             )
+
             .oauth2Login(oauth -> oauth
                 .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
                 .successHandler(successHandler)
@@ -68,7 +80,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(frontendUrl));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
