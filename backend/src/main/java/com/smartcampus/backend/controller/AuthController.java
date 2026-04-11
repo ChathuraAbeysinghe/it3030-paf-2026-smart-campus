@@ -1,0 +1,150 @@
+package com.smartcampus.backend.controller;
+
+import com.smartcampus.backend.dto.LoginRequest;
+import com.smartcampus.backend.dto.RegisterRequest;
+import com.smartcampus.backend.model.Role;
+import com.smartcampus.backend.model.User;
+import com.smartcampus.backend.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    @Value("${app.admin-emails:}")
+    private String adminEmailsConfig;
+
+    private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+
+    /**
+     * POST /api/auth/register
+     * Creates a new user with BCrypt-hashed password.
+     */
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        // Enforce faculty-specific ID prefixes
+        Map<String, String> facultyPrefixes = Map.of(
+            "COMPUTING", "IT",
+            "ENGINEERING", "EN",
+            "SLIIT BUSINESS SCHOOL", "BM",
+            "HUMANITIES & SCIENCES", "SH",
+            "GRADUATE STUDIES", "MS",
+            "SCHOOL OF ARCHITECTURE", "AR",
+            "SCHOOL OF LAW", "LW",
+            "SCHOOL OF HOSPITALITY & CULINARY", "HC",
+            "FOUNDATION PROGRAMME", "FO"
+        );
+        String expectedPrefix = facultyPrefixes.get(request.getFaculty());
+        if (expectedPrefix != null && !request.getItNumber().toUpperCase().startsWith(expectedPrefix)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "ID prefix must be " + expectedPrefix + " for " + request.getFaculty()));
+        }
+
+        // Verify IT Number matches Email
+        if (!request.getEmail().toUpperCase().startsWith(request.getItNumber().toUpperCase())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "IT Number does not match the provided campus email."));
+        }
+
+        // Check if email already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
+        }
+
+        // Determine role
+        List<String> adminEmails = adminEmailsConfig.isBlank()
+                ? List.of()
+                : Arrays.asList(adminEmailsConfig.split(","));
+        Role role = adminEmails.contains(request.getEmail().trim()) ? Role.ADMIN : Role.USER;
+
+        User user = User.builder()
+                .name(request.getName())
+                .itNumber(request.getItNumber().toUpperCase())
+                .faculty(request.getFaculty())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(role)
+                .build();
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "id",    user.getId(),
+                "name",  user.getName(),
+                "email", user.getEmail(),
+                "role",  user.getRole().name()
+        ));
+    }
+
+    /**
+     * POST /api/auth/login
+     * Validates email/password credentials and returns user info.
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
+        }
+
+        User user = userOptional.get();
+
+        // User registered via Google (no password)
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of(
+                "error", "This account uses Google login. Please use 'Continue with Google'."
+            ));
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
+        }
+
+        // Store user info in session so /api/user/me-manual works
+        HttpSession session = httpRequest.getSession(true);
+        session.setAttribute("manualUserId", user.getId());
+
+        return ResponseEntity.ok(Map.of(
+                "id",      user.getId(),
+                "name",    user.getName(),
+                "email",   user.getEmail(),
+                "picture", user.getPicture() != null ? user.getPicture() : "",
+                "role",    user.getRole().name()
+        ));
+    }
+
+    /**
+     * POST /api/auth/logout
+     * Invalidates the current session and clears security context.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            logoutHandler.logout(request, response, auth);
+        }
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+}
