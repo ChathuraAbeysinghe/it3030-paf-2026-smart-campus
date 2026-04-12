@@ -20,7 +20,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +46,15 @@ public class BookingService {
                     : bookingRepository.findByUserIdAndStatusOrderByCreatedAtDesc(actor.getId(), status);
         }
 
-        return bookings.stream().map(this::toResponse).toList();
+        Set<String> facilityIds = bookings.stream().map(Booking::getFacilityId).collect(Collectors.toSet());
+        Set<String> userIds     = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
+
+        Map<String, String> facilityNames = resourceRepository.findAllById(facilityIds)
+                .stream().collect(Collectors.toMap(Resource::getId, Resource::getName));
+        Map<String, String> userNames = userRepository.findAllById(userIds)
+                .stream().collect(Collectors.toMap(User::getId, User::getName));
+
+        return bookings.stream().map(b -> toResponse(b, facilityNames, userNames)).toList();
     }
 
     public BookingResponse getById(User actor, String id) {
@@ -118,6 +128,7 @@ public class BookingService {
         return toResponse(bookingRepository.save(existing));
     }
 
+    //Generate QR code on approve
     public BookingResponse approve(User actor, String id, String adminNotes) {
         ensureAdmin(actor);
         Booking booking = getByIdOrThrow(id);
@@ -138,6 +149,8 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.APPROVED);
         booking.setAdminNotes(normalizeNote(adminNotes));
+        //Set QR code when approved
+        booking.setQrCode("QR-" + id.substring(0, 8).toUpperCase() + "-" + LocalDate.now().getYear());
         booking.setUpdatedAt(Instant.now());
 
         return toResponse(bookingRepository.save(booking));
@@ -160,12 +173,20 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    //Allow PENDING bookings to be cancelled by owner
     public BookingResponse cancel(User actor, String id) {
         Booking booking = getByIdOrThrow(id);
         ensureOwnerOrAdmin(actor, booking);
 
-        if (booking.getStatus() != BookingStatus.APPROVED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only approved bookings can be cancelled");
+        if (booking.getStatus() == BookingStatus.CANCELLED
+                || booking.getStatus() == BookingStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Booking is already " + booking.getStatus().name().toLowerCase());
+        }
+
+        // Only admin can cancel an already-approved booking
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            ensureAdmin(actor);
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
@@ -193,6 +214,8 @@ public class BookingService {
                 .map(this::toResponse)
                 .toList();
     }
+
+    // ── Private helpers ──
 
     private void validateRequest(BookingRequest request) {
         if (request.getStartTime() != null
@@ -240,9 +263,7 @@ public class BookingService {
     }
 
     private void ensureOwnerOrAdmin(User actor, Booking booking) {
-        if (actor.getRole() == Role.ADMIN) {
-            return;
-        }
+        if (actor.getRole() == Role.ADMIN) return;
         if (!booking.getUserId().equals(actor.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this booking");
         }
@@ -255,28 +276,20 @@ public class BookingService {
     }
 
     private String normalizeNote(String raw) {
-        if (raw == null) {
-            return null;
-        }
+        if (raw == null) return null;
         String trimmed = raw.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private BookingResponse toResponse(Booking booking) {
-        String facilityName = resourceRepository.findById(booking.getFacilityId())
-                .map(Resource::getName)
-                .orElse(booking.getFacilityId());
-
-        String userName = userRepository.findById(booking.getUserId())
-                .map(User::getName)
-                .orElse(booking.getUserId());
-
+    private BookingResponse toResponse(Booking booking,
+                                        Map<String, String> facilityNames,
+                                        Map<String, String> userNames) {
         return BookingResponse.builder()
                 .id(booking.getId())
                 .facilityId(booking.getFacilityId())
-                .facilityName(facilityName)
+                .facilityName(facilityNames.getOrDefault(booking.getFacilityId(), booking.getFacilityId()))
                 .userId(booking.getUserId())
-                .userName(userName)
+                .userName(userNames.getOrDefault(booking.getUserId(), booking.getUserId()))
                 .date(booking.getDate())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
@@ -284,8 +297,20 @@ public class BookingService {
                 .expectedAttendees(booking.getExpectedAttendees())
                 .status(booking.getStatus())
                 .adminNotes(booking.getAdminNotes())
+                .qrCode(booking.getQrCode())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();
+    }
+
+    // ── Single booking version — used by create/update/approve/reject/cancel ──
+    private BookingResponse toResponse(Booking booking) {
+        String facilityName = resourceRepository.findById(booking.getFacilityId())
+                .map(Resource::getName).orElse(booking.getFacilityId());
+        String userName = userRepository.findById(booking.getUserId())
+                .map(User::getName).orElse(booking.getUserId());
+        return toResponse(booking,
+                Map.of(booking.getFacilityId(), facilityName),
+                Map.of(booking.getUserId(), userName));
     }
 }

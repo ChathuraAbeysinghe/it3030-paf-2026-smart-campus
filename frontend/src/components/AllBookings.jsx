@@ -3,9 +3,14 @@ import GlassTable from './GlassTable';
 import StatusBadge from './StatusBadge';
 
 export default function AllBookings({ bookings, onApprove, onReject, onCancel }) {
-  var [statusFilter, setStatusFilter] = useState('ALL');
+  var [statusFilter, setStatusFilter]   = useState('ALL');
   var [facilityFilter, setFacilityFilter] = useState('');
-  var [userFilter, setUserFilter] = useState('');
+  var [userFilter, setUserFilter]       = useState('');
+
+  var [dateFrom, setDateFrom] = useState('');
+  var [dateTo, setDateTo]     = useState('');
+
+  var [rowNotes, setRowNotes] = useState({});
 
   var filtered = useMemo(function () {
     var rows = Array.isArray(bookings) ? bookings : [];
@@ -27,8 +32,15 @@ export default function AllBookings({ bookings, onApprove, onReject, onCancel })
       });
     }
 
+    if (dateFrom) {
+      rows = rows.filter(function (b) { return b.date >= dateFrom; });
+    }
+    if (dateTo) {
+      rows = rows.filter(function (b) { return b.date <= dateTo; });
+    }
+
     return rows;
-  }, [bookings, statusFilter, facilityFilter, userFilter]);
+  }, [bookings, statusFilter, facilityFilter, userFilter, dateFrom, dateTo]);
 
   var columns = [
     {
@@ -74,7 +86,7 @@ export default function AllBookings({ bookings, onApprove, onReject, onCancel })
     <div className="glass-card" style={{ padding: 16 }}>
       <h2 style={{ marginBottom: 10 }}>All Bookings</h2>
 
-      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: 12 }}>
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 12 }}>
         <select className="form-input" value={statusFilter} onChange={function (e) { setStatusFilter(e.target.value); }}>
           <option value="ALL">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -96,27 +108,63 @@ export default function AllBookings({ bookings, onApprove, onReject, onCancel })
           onChange={function (e) { setUserFilter(e.target.value); }}
           placeholder="Filter by user"
         />
+
+        <input
+          type="date"
+          className="form-input"
+          value={dateFrom}
+          onChange={function (e) { setDateFrom(e.target.value); }}
+          title="From date"
+        />
+        <input
+          type="date"
+          className="form-input"
+          value={dateTo}
+          onChange={function (e) { setDateTo(e.target.value); }}
+          title="To date"
+        />
       </div>
 
       <GlassTable
         columns={columns}
         data={filtered}
         actions={function (row) {
+
           if (row.status === 'PENDING') {
             return (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button className="btn-sm btn-sm--success" onClick={function () { onApprove(row.id, 'Approved by admin'); }}>
-                  Approve
-                </button>
-                <button
-                  className="btn-sm btn-sm--danger"
-                  onClick={function () {
-                    var reason = window.prompt('Reason for rejection:') || '';
-                    if (reason.trim()) onReject(row.id, reason.trim());
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <input
+                  className="form-input"
+                  style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                  placeholder="Admin notes..."
+                  value={rowNotes[row.id] || ''}
+                  onChange={function (e) {
+                    var val = e.target.value;
+                    setRowNotes(function (prev) {
+                      return { ...prev, [row.id]: val };
+                    });
                   }}
-                >
-                  Reject
-                </button>
+                />
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    className="btn-sm btn-sm--success"
+                    onClick={function () {
+                      onApprove(row.id, rowNotes[row.id] || 'Approved by admin');
+                    }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    className="btn-sm btn-sm--danger"
+                    onClick={function () {
+                      var note = rowNotes[row.id] || '';
+                      if (!note.trim()) { alert('Please add a rejection reason.'); return; }
+                      onReject(row.id, note.trim());
+                    }}
+                  >
+                    Reject
+                  </button>
+                </div>
               </div>
             );
           }

@@ -4,10 +4,12 @@ import AvailabilityChecker from './AvailabilityChecker';
 import StatusBadge from './StatusBadge';
 
 export default function BookingApprovalPanel({ pendingBookings, onApprove, onReject }) {
-  var [selectedId, setSelectedId] = useState('');
-  var [adminNotes, setAdminNotes] = useState('');
-  var [conflicts, setConflicts] = useState([]);
+  var [selectedId, setSelectedId]           = useState('');
+  var [adminNotes, setAdminNotes]           = useState('');
+  var [conflicts, setConflicts]             = useState([]);
   var [loadingConflicts, setLoadingConflicts] = useState(false);
+
+  var [actionError, setActionError] = useState('');
 
   useEffect(function () {
     if (!Array.isArray(pendingBookings) || pendingBookings.length === 0) {
@@ -44,15 +46,18 @@ export default function BookingApprovalPanel({ pendingBookings, onApprove, onRej
       }
     })();
 
-    return function () {
-      cancelled = true;
-    };
+    return function () { cancelled = true; };
   }, [selectedBooking]);
 
   async function handleApprove() {
     if (!selectedBooking) return;
-    await onApprove(selectedBooking.id, adminNotes || 'Approved by admin');
-    setAdminNotes('');
+    try {
+      setActionError('');
+      await onApprove(selectedBooking.id, adminNotes || 'Approved by admin');
+      setAdminNotes('');
+    } catch (err) {
+      setActionError(err.message || 'Failed to approve booking');
+    }
   }
 
   async function handleReject() {
@@ -61,8 +66,13 @@ export default function BookingApprovalPanel({ pendingBookings, onApprove, onRej
       window.alert('Please add a rejection reason.');
       return;
     }
-    await onReject(selectedBooking.id, adminNotes.trim());
-    setAdminNotes('');
+    try {
+      setActionError('');
+      await onReject(selectedBooking.id, adminNotes.trim());
+      setAdminNotes('');
+    } catch (err) {
+      setActionError(err.message || 'Failed to reject booking');
+    }
   }
 
   return (
@@ -118,6 +128,8 @@ export default function BookingApprovalPanel({ pendingBookings, onApprove, onRej
                   startTime={selectedBooking.startTime}
                   endTime={selectedBooking.endTime}
                   excludeBookingId={selectedBooking.id}
+                  selectedDate={selectedBooking.date}
+                  onDateSelect={function () {}}
                 />
               )}
 
@@ -129,9 +141,16 @@ export default function BookingApprovalPanel({ pendingBookings, onApprove, onRej
                 onChange={function (e) { setAdminNotes(e.target.value); }}
               />
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <button className="btn-sm btn-sm--success" onClick={handleApprove}>Approve Booking</button>
                 <button className="btn-sm btn-sm--danger" onClick={handleReject}>Reject Booking</button>
+
+                {/*Show action error*/}
+                {actionError && (
+                  <span style={{ color: '#F87171', fontSize: '0.85rem' }}>
+                    ⚠️ {actionError}
+                  </span>
+                )}
               </div>
             </div>
           )}

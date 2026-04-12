@@ -30,11 +30,11 @@ export default function BookingForm({
   initialBooking,
   onCancelEdit,
 }) {
-  var [form, setForm] = useState(normalizeBooking(initialBooking));
-  var [conflicts, setConflicts] = useState([]);
+  var [form, setForm]               = useState(normalizeBooking(initialBooking));
+  var [conflicts, setConflicts]     = useState([]);
   var [loadingConflicts, setLoadingConflicts] = useState(false);
-  var [submitting, setSubmitting] = useState(false);
-  var [error, setError] = useState('');
+  var [submitting, setSubmitting]   = useState(false);
+  var [error, setError]             = useState('');
 
   var isEdit = !!initialBooking;
 
@@ -63,9 +63,7 @@ export default function BookingForm({
       }
     })();
 
-    return function () {
-      cancelled = true;
-    };
+    return function () { cancelled = true; };
   }, [form.facilityId, form.date]);
 
   var hasBasicInvalidTime = useMemo(function () {
@@ -73,10 +71,18 @@ export default function BookingForm({
     return form.startTime >= form.endTime;
   }, [form.startTime, form.endTime]);
 
+  var hasOverlap = useMemo(function () {
+    if (!form.startTime || !form.endTime || conflicts.length === 0) return false;
+    var editId = initialBooking ? initialBooking.id : null;
+    return conflicts
+      .filter(function (c) { return c.id !== editId; })
+      .some(function (c) {
+        return c.startTime < form.endTime && c.endTime > form.startTime;
+      });
+  }, [conflicts, form.startTime, form.endTime, initialBooking]);
+
   function onChange(key, value) {
-    setForm(function (prev) {
-      return { ...prev, [key]: value };
-    });
+    setForm(function (prev) { return { ...prev, [key]: value }; });
   }
 
   async function handleSubmit(e) {
@@ -84,6 +90,11 @@ export default function BookingForm({
 
     if (hasBasicInvalidTime) {
       setError('Start time must be before end time');
+      return;
+    }
+
+    if (hasOverlap) {
+      setError('This time slot conflicts with an existing booking');
       return;
     }
 
@@ -203,14 +214,25 @@ export default function BookingForm({
           />
         )}
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn-sm btn-sm--primary" type="submit" disabled={submitting}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn-sm btn-sm--primary"
+            type="submit"
+            disabled={submitting || hasOverlap || hasBasicInvalidTime}
+          >
             {submitting ? 'Saving...' : (isEdit ? 'Update Booking' : 'Submit Booking')}
           </button>
+
           {isEdit && (
             <button type="button" className="btn-sm" onClick={onCancelEdit}>
               Cancel Edit
             </button>
+          )}
+
+          {hasOverlap && (
+            <span style={{ color: '#F87171', fontSize: '0.8rem' }}>
+              ⚠️ Time slot already booked
+            </span>
           )}
         </div>
       </form>
