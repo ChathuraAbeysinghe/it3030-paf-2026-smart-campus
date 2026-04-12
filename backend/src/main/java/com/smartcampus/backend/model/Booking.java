@@ -34,6 +34,9 @@ public class Booking {
     @Builder.Default
     private BookingStatus status = BookingStatus.PENDING;
 
+    @Builder.Default
+    private BookingType bookingType = BookingType.BOOKING;
+
     private String adminNotes;
 
     private String qrCode;

@@ -4,6 +4,7 @@ import com.smartcampus.backend.dto.BookingRequest;
 import com.smartcampus.backend.dto.BookingResponse;
 import com.smartcampus.backend.model.Booking;
 import com.smartcampus.backend.model.BookingStatus;
+import com.smartcampus.backend.model.BookingType;
 import com.smartcampus.backend.model.Resource;
 import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
@@ -14,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
+ 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -215,11 +216,29 @@ public class BookingService {
                 .toList();
     }
 
-    // ── Private helpers ──
-
-    private void validateRequest(BookingRequest request) {
-        if (request.getStartTime() != null
-                && request.getEndTime() != null
+     //attendees cannot exceed resource capacity
+    private void validateCapacity(int attendees, Resource facility) {
+        if (facility.getCapacity() != null && attendees > facility.getCapacity()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Attendees (" + attendees + ") exceed the capacity of "
+                    + facility.getName() + " (" + facility.getCapacity() + ")");
+        }
+    }
+ 
+    // BOOKING = attendees >= 60%, REQUEST = below 60%
+    private BookingType resolveBookingType(int attendees, Integer capacity) {
+        if (capacity == null || capacity == 0) return BookingType.BOOKING;
+        int minRequired = (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
+        return attendees >= minRequired ? BookingType.BOOKING : BookingType.REQUEST;
+    }
+ 
+    private int computeMinRequired(Integer capacity) {
+        if (capacity == null || capacity == 0) return 1;
+        return (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
+    }
+ 
+    private void validateTimes(BookingRequest request) {
+        if (request.getStartTime() != null && request.getEndTime() != null
                 && !request.getStartTime().isBefore(request.getEndTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time must be before end time");
         }
@@ -281,36 +300,35 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private BookingResponse toResponse(Booking booking,
-                                        Map<String, String> facilityNames,
-                                        Map<String, String> userNames) {
+    
+ 
+    //used create/update/approve/reject/cancel
+    private BookingResponse toResponse(Booking booking) {
+        Resource facility   = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+        String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
+        Integer capacity    = facility != null ? facility.getCapacity() : null;
+        String userName     = userRepository.findById(booking.getUserId())
+                .map(User::getName).orElse(booking.getUserId());
+ 
         return BookingResponse.builder()
                 .id(booking.getId())
                 .facilityId(booking.getFacilityId())
-                .facilityName(facilityNames.getOrDefault(booking.getFacilityId(), booking.getFacilityId()))
+                .facilityName(facilityName)
+                .facilityCapacity(capacity)
+                .minimumAttendeesRequired(computeMinRequired(capacity))
                 .userId(booking.getUserId())
-                .userName(userNames.getOrDefault(booking.getUserId(), booking.getUserId()))
+                .userName(userName)
                 .date(booking.getDate())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
                 .purpose(booking.getPurpose())
                 .expectedAttendees(booking.getExpectedAttendees())
                 .status(booking.getStatus())
+                .bookingType(booking.getBookingType())
                 .adminNotes(booking.getAdminNotes())
                 .qrCode(booking.getQrCode())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();
-    }
-
-    // ── Single booking version — used by create/update/approve/reject/cancel ──
-    private BookingResponse toResponse(Booking booking) {
-        String facilityName = resourceRepository.findById(booking.getFacilityId())
-                .map(Resource::getName).orElse(booking.getFacilityId());
-        String userName = userRepository.findById(booking.getUserId())
-                .map(User::getName).orElse(booking.getUserId());
-        return toResponse(booking,
-                Map.of(booking.getFacilityId(), facilityName),
-                Map.of(booking.getUserId(), userName));
     }
 }
