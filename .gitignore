@@ -40,6 +40,11 @@ desktop.ini
 !.env.example
 
 # ========================
+# Local Secret Config
+# ========================
+backend/src/main/resources/application-local.properties
+
+# ========================
 # Node / Frontend 
 # ========================
 node_modules/
@@ -68,5 +73,8 @@ target/
 *.rar
 hs_err_pid*
 replay_pid*
+
+# Local secrets (do not commit)
+backend/src/main/resources/application-local.properties
 .mvn/wrapper/maven-wrapper.jar
 
