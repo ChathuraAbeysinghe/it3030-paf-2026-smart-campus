@@ -30,6 +30,7 @@ public class BookingResponse {
     private Integer expectedAttendees;
 
     private BookingStatus status;
+    private BookingType bookingType;
     private String adminNotes;
 
     private String qrCode;

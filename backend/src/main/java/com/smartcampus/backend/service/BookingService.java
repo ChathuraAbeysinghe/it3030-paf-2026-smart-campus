@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class BookingService {
 
     private static final Set<BookingStatus> BLOCKING_STATUSES = Set.of(BookingStatus.PENDING, BookingStatus.APPROVED);
+    private static final double MIN_OCCUPANCY_RATIO = 0.6;
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
@@ -244,6 +245,10 @@ public class BookingService {
         }
     }
 
+    private void validateRequest(BookingRequest request) {
+        validateTimes(request);
+    }
+
     private Booking getByIdOrThrow(String id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
@@ -300,8 +305,6 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    
- 
     //used create/update/approve/reject/cancel
     private BookingResponse toResponse(Booking booking) {
         Resource facility   = resourceRepository.findById(booking.getFacilityId()).orElse(null);
@@ -309,7 +312,38 @@ public class BookingService {
         Integer capacity    = facility != null ? facility.getCapacity() : null;
         String userName     = userRepository.findById(booking.getUserId())
                 .map(User::getName).orElse(booking.getUserId());
- 
+
+        return BookingResponse.builder()
+                .id(booking.getId())
+                .facilityId(booking.getFacilityId())
+                .facilityName(facilityName)
+                .facilityCapacity(capacity)
+                .minimumAttendeesRequired(computeMinRequired(capacity))
+                .userId(booking.getUserId())
+                .userName(userName)
+                .date(booking.getDate())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .purpose(booking.getPurpose())
+                .expectedAttendees(booking.getExpectedAttendees())
+                .status(booking.getStatus())
+                .bookingType(booking.getBookingType())
+                .adminNotes(booking.getAdminNotes())
+                .qrCode(booking.getQrCode())
+                .createdAt(booking.getCreatedAt())
+                .updatedAt(booking.getUpdatedAt())
+                .build();
+    }
+
+    // Overload for batch retrieval with pre-fetched names
+    private BookingResponse toResponse(Booking booking, Map<String, String> facilityNames, Map<String, String> userNames) {
+        String facilityName = facilityNames.getOrDefault(booking.getFacilityId(), booking.getFacilityId());
+        String userName     = userNames.getOrDefault(booking.getUserId(), booking.getUserId());
+
+        // Need to fetch capacity for minimum attendees calculation
+        Resource facility = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+        Integer capacity = facility != null ? facility.getCapacity() : null;
+
         return BookingResponse.builder()
                 .id(booking.getId())
                 .facilityId(booking.getFacilityId())
