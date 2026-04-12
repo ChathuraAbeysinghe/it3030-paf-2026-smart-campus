@@ -1,6 +1,7 @@
 package com.smartcampus.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.smartcampus.backend.model.BookingType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,4 +34,6 @@ public class BookingRequest {
     @Min(value = 1, message = "Attendees must be at least 1")
     @JsonAlias("expectedAttendees")
     private Integer attendees;
+
+    private BookingType bookingType;
 }

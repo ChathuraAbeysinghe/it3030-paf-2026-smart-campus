@@ -1,4 +1,3 @@
-// backend/src/main/java/com/smartcampus/backend/model/Resource.java
 package com.smartcampus.backend.model;
 
 import lombok.AllArgsConstructor;
@@ -25,6 +24,10 @@ public class Resource {
     private Integer capacity;
     private String location;
     private String description;
+
+    // Daily available time window for this resource (HH:mm)
+    private String availableFrom;
+    private String availableTo;
 
     @Builder.Default
     private ResourceStatus status = ResourceStatus.ACTIVE;

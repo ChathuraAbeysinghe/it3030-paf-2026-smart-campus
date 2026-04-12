@@ -16,9 +16,8 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 @Document(collection = "bookings")
-
 public class Booking {
-    
+
     @Id
     private String id;
 
@@ -35,7 +34,12 @@ public class Booking {
     @Builder.Default
     private BookingStatus status = BookingStatus.PENDING;
 
+    @Builder.Default
+    private BookingType bookingType = BookingType.BOOKING;
+
     private String adminNotes;
+
+    private String qrCode;
 
     private Instant createdAt;
     private Instant updatedAt;

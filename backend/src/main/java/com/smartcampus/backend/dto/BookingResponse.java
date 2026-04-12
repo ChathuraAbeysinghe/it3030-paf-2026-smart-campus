@@ -1,6 +1,7 @@
 package com.smartcampus.backend.dto;
 
 import com.smartcampus.backend.model.BookingStatus;
+import com.smartcampus.backend.model.BookingType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,6 +16,8 @@ public class BookingResponse {
 
     private String facilityId;
     private String facilityName;
+    private Integer facilityCapacity;
+    private Integer minimumAttendeesRequired;
 
     private String userId;
     private String userName;
@@ -28,6 +31,8 @@ public class BookingResponse {
 
     private BookingStatus status;
     private String adminNotes;
+
+    private String qrCode;
 
     private Instant createdAt;
     private Instant updatedAt;

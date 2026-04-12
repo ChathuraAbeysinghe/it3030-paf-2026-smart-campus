@@ -51,4 +51,20 @@ public class ResourceController {
         resourceService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    public Resource updateStatus(
+            @PathVariable String id,
+            @RequestBody java.util.Map<String, String> body) {
+
+        String statusStr = body.get("status");
+        if (statusStr == null || statusStr.isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Status is required"
+            );
+        }
+
+        return resourceService.updateStatus(id, statusStr);
+    }
 }

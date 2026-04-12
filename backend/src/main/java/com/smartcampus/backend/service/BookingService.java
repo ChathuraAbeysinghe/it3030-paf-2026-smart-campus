@@ -4,6 +4,7 @@ import com.smartcampus.backend.dto.BookingRequest;
 import com.smartcampus.backend.dto.BookingResponse;
 import com.smartcampus.backend.model.Booking;
 import com.smartcampus.backend.model.BookingStatus;
+import com.smartcampus.backend.model.BookingType;
 import com.smartcampus.backend.model.Resource;
 import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
@@ -14,13 +15,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
+ 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +47,15 @@ public class BookingService {
                     : bookingRepository.findByUserIdAndStatusOrderByCreatedAtDesc(actor.getId(), status);
         }
 
-        return bookings.stream().map(this::toResponse).toList();
+        Set<String> facilityIds = bookings.stream().map(Booking::getFacilityId).collect(Collectors.toSet());
+        Set<String> userIds     = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
+
+        Map<String, String> facilityNames = resourceRepository.findAllById(facilityIds)
+                .stream().collect(Collectors.toMap(Resource::getId, Resource::getName));
+        Map<String, String> userNames = userRepository.findAllById(userIds)
+                .stream().collect(Collectors.toMap(User::getId, User::getName));
+
+        return bookings.stream().map(b -> toResponse(b, facilityNames, userNames)).toList();
     }
 
     public BookingResponse getById(User actor, String id) {
@@ -118,6 +129,7 @@ public class BookingService {
         return toResponse(bookingRepository.save(existing));
     }
 
+    //Generate QR code on approve
     public BookingResponse approve(User actor, String id, String adminNotes) {
         ensureAdmin(actor);
         Booking booking = getByIdOrThrow(id);
@@ -138,6 +150,8 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.APPROVED);
         booking.setAdminNotes(normalizeNote(adminNotes));
+        //Set QR code when approved
+        booking.setQrCode("QR-" + id.substring(0, 8).toUpperCase() + "-" + LocalDate.now().getYear());
         booking.setUpdatedAt(Instant.now());
 
         return toResponse(bookingRepository.save(booking));
@@ -160,12 +174,20 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    //Allow PENDING bookings to be cancelled by owner
     public BookingResponse cancel(User actor, String id) {
         Booking booking = getByIdOrThrow(id);
         ensureOwnerOrAdmin(actor, booking);
 
-        if (booking.getStatus() != BookingStatus.APPROVED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only approved bookings can be cancelled");
+        if (booking.getStatus() == BookingStatus.CANCELLED
+                || booking.getStatus() == BookingStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Booking is already " + booking.getStatus().name().toLowerCase());
+        }
+
+        // Only admin can cancel an already-approved booking
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            ensureAdmin(actor);
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
@@ -194,9 +216,29 @@ public class BookingService {
                 .toList();
     }
 
-    private void validateRequest(BookingRequest request) {
-        if (request.getStartTime() != null
-                && request.getEndTime() != null
+     //attendees cannot exceed resource capacity
+    private void validateCapacity(int attendees, Resource facility) {
+        if (facility.getCapacity() != null && attendees > facility.getCapacity()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Attendees (" + attendees + ") exceed the capacity of "
+                    + facility.getName() + " (" + facility.getCapacity() + ")");
+        }
+    }
+ 
+    // BOOKING = attendees >= 60%, REQUEST = below 60%
+    private BookingType resolveBookingType(int attendees, Integer capacity) {
+        if (capacity == null || capacity == 0) return BookingType.BOOKING;
+        int minRequired = (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
+        return attendees >= minRequired ? BookingType.BOOKING : BookingType.REQUEST;
+    }
+ 
+    private int computeMinRequired(Integer capacity) {
+        if (capacity == null || capacity == 0) return 1;
+        return (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
+    }
+ 
+    private void validateTimes(BookingRequest request) {
+        if (request.getStartTime() != null && request.getEndTime() != null
                 && !request.getStartTime().isBefore(request.getEndTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time must be before end time");
         }
@@ -240,9 +282,7 @@ public class BookingService {
     }
 
     private void ensureOwnerOrAdmin(User actor, Booking booking) {
-        if (actor.getRole() == Role.ADMIN) {
-            return;
-        }
+        if (actor.getRole() == Role.ADMIN) return;
         if (!booking.getUserId().equals(actor.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this booking");
         }
@@ -255,26 +295,27 @@ public class BookingService {
     }
 
     private String normalizeNote(String raw) {
-        if (raw == null) {
-            return null;
-        }
+        if (raw == null) return null;
         String trimmed = raw.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
+    
+ 
+    //used create/update/approve/reject/cancel
     private BookingResponse toResponse(Booking booking) {
-        String facilityName = resourceRepository.findById(booking.getFacilityId())
-                .map(Resource::getName)
-                .orElse(booking.getFacilityId());
-
-        String userName = userRepository.findById(booking.getUserId())
-                .map(User::getName)
-                .orElse(booking.getUserId());
-
+        Resource facility   = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+        String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
+        Integer capacity    = facility != null ? facility.getCapacity() : null;
+        String userName     = userRepository.findById(booking.getUserId())
+                .map(User::getName).orElse(booking.getUserId());
+ 
         return BookingResponse.builder()
                 .id(booking.getId())
                 .facilityId(booking.getFacilityId())
                 .facilityName(facilityName)
+                .facilityCapacity(capacity)
+                .minimumAttendeesRequired(computeMinRequired(capacity))
                 .userId(booking.getUserId())
                 .userName(userName)
                 .date(booking.getDate())
@@ -283,7 +324,9 @@ public class BookingService {
                 .purpose(booking.getPurpose())
                 .expectedAttendees(booking.getExpectedAttendees())
                 .status(booking.getStatus())
+                .bookingType(booking.getBookingType())
                 .adminNotes(booking.getAdminNotes())
+                .qrCode(booking.getQrCode())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();
