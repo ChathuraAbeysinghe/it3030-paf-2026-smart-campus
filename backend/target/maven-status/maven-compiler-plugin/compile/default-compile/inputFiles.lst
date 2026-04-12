@@ -15,6 +15,7 @@ D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smar
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\LoginRequest.java
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\AuthController.java
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingDecisionRequest.java
+D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\BookingType.java
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceStatus.java
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\ResourceService.java
 D:\3Y 1S\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\SecurityConfig.java
