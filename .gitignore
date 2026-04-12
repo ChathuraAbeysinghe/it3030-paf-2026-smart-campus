@@ -73,5 +73,8 @@ target/
 *.rar
 hs_err_pid*
 replay_pid*
+
+# Local secrets (do not commit)
+backend/src/main/resources/application-local.properties
 .mvn/wrapper/maven-wrapper.jar
 

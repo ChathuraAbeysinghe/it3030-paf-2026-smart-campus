@@ -6,9 +6,6 @@ import QRCheckin from '../../components/QRCheckin';
 import GlassModal from '../../components/GlassModal';
 import BookingForm from '../../components/BookingForm';
 
-/**
- * My Bookings — booking list with status, QR check-in, and cancel.
- */
 export default function MyBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
@@ -24,7 +21,7 @@ export default function MyBookings() {
   const loadData = async () => {
     try {
       const [bookingRows, resourceRows] = await Promise.all([
-        user?.id ? bookingService.getByUser(user.id) : bookingService.getAll(),
+        bookingService.getAll(),
         resourceService.getAll(),
       ]);
 
@@ -107,18 +104,22 @@ export default function MyBookings() {
             </div>
             <div className="booking-card-right">
               <StatusBadge status={b.status} />
-              <div className="booking-actions" style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+              <div className="booking-actions" style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+
                 {b.status === 'APPROVED' && b.qrCode && (
                   <button className="btn-sm btn-sm--primary" onClick={() => setQrModal(b)}>📱 QR Check-in</button>
                 )}
+
                 {b.status === 'PENDING' && (
-                  <button className="btn-sm" onClick={() => setEditingBooking(b)}>Edit</button>
+                  <>
+                    <button className="btn-sm" onClick={() => setEditingBooking(b)}>Edit</button>
+                    <button className="btn-sm btn-sm--danger" onClick={() => handleCancel(b.id)}>Cancel</button>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Awaiting admin review</span>
+                  </>
                 )}
+
                 {b.status === 'APPROVED' && (
                   <button className="btn-sm btn-sm--danger" onClick={() => handleCancel(b.id)}>Cancel</button>
-                )}
-                {b.status === 'PENDING' && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Awaiting admin review</span>
                 )}
               </div>
             </div>
