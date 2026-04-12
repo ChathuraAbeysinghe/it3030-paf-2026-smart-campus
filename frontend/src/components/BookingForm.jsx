@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { bookingService } from '../services/api';
 import AvailabilityChecker from './AvailabilityChecker';
 
+const MIN_OCCUPANCY = 0.60;
+
+function computeMinRequired(capacity) {
+  if (!capacity || capacity === 0) return 1;
+  return Math.ceil(capacity * MIN_OCCUPANCY);
+}
+
 function normalizeBooking(initialBooking) {
   if (!initialBooking) {
     return {
@@ -36,12 +43,22 @@ export default function BookingForm({
   var [submitting, setSubmitting]   = useState(false);
   var [error, setError]             = useState('');
 
+  // ── NEW: selected resource state for capacity validation ──
+  var [selectedResource, setSelectedResource] = useState(null);
+
   var isEdit = !!initialBooking;
 
   useEffect(function () {
     setForm(normalizeBooking(initialBooking));
     setError('');
   }, [initialBooking]);
+
+  // ── NEW: load resource details when facility changes ──
+  useEffect(function () {
+    if (!form.facilityId) { setSelectedResource(null); return; }
+    var found = (resources || []).find(function (r) { return r.id === form.facilityId; });
+    setSelectedResource(found || null);
+  }, [form.facilityId, resources]);
 
   useEffect(function () {
     var canCheck = form.facilityId && form.date;
@@ -65,6 +82,19 @@ export default function BookingForm({
 
     return function () { cancelled = true; };
   }, [form.facilityId, form.date]);
+
+  // ── NEW: capacity validation computed values ──
+  var capacity     = selectedResource ? selectedResource.capacity : null;
+  var minRequired  = computeMinRequired(capacity);
+  var attendees    = Number(form.attendees) || 0;
+  var overCapacity = capacity != null && attendees > capacity;
+  var belowMinimum = capacity != null && attendees > 0 && attendees < minRequired;
+
+  // ── NEW: booking type label (BOOKING or REQUEST) ──
+  var bookingTypeLabel = useMemo(function () {
+    if (!capacity || attendees === 0 || overCapacity) return null;
+    return attendees >= minRequired ? 'BOOKING' : 'REQUEST';
+  }, [attendees, capacity, minRequired, overCapacity]);
 
   var hasBasicInvalidTime = useMemo(function () {
     if (!form.startTime || !form.endTime) return false;
@@ -90,6 +120,12 @@ export default function BookingForm({
 
     if (hasBasicInvalidTime) {
       setError('Start time must be before end time');
+      return;
+    }
+
+    // ── NEW: block submit if over capacity ──
+    if (overCapacity) {
+      setError('Attendees exceed facility capacity');
       return;
     }
 
@@ -151,7 +187,8 @@ export default function BookingForm({
             {(resources || []).map(function (resource) {
               return (
                 <option key={resource.id} value={resource.id}>
-                  {resource.name}
+                  {/* ── NEW: show capacity in dropdown ── */}
+                  {resource.name} (Cap: {resource.capacity})
                 </option>
               );
             })}
@@ -185,12 +222,69 @@ export default function BookingForm({
             className="form-input"
             type="number"
             min="1"
+            max={capacity || undefined}
             value={form.attendees}
             onChange={function (e) { onChange('attendees', e.target.value); }}
             placeholder="Expected attendees"
             required
+            // ── NEW: border color changes based on validation ──
+            style={{ borderColor: overCapacity ? '#F87171' : belowMinimum ? '#FBBF24' : undefined }}
           />
         </div>
+
+        {/* ── NEW: Capacity validation panel ── */}
+        {selectedResource && capacity != null && (
+          <div className="glass-card" style={{
+            padding: '10px 14px', display: 'grid', gap: 6,
+            border: overCapacity
+              ? '1px solid rgba(248,113,113,0.5)'
+              : belowMinimum
+                ? '1px solid rgba(251,191,36,0.5)'
+                : '1px solid rgba(52,211,153,0.4)',
+          }}>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.83rem' }}>
+              <span>🏛️ <strong>Capacity:</strong> {capacity}</span>
+              <span>👥 <strong>Min required (60%):</strong> {minRequired}</span>
+              {attendees > 0 && !overCapacity && (
+                <span>📊 <strong>Occupancy:</strong> {Math.round((attendees / capacity) * 100)}%</span>
+              )}
+            </div>
+
+            {overCapacity && (
+              <div style={{ color: '#F87171', fontWeight: 600, fontSize: '0.85rem' }}>
+                🚫 Attendees ({attendees}) exceed the capacity of {selectedResource.name} ({capacity}). Please reduce the number of attendees.
+              </div>
+            )}
+
+            {!overCapacity && belowMinimum && (
+              <div style={{ color: '#FBBF24', fontSize: '0.85rem' }}>
+                ⚠️ Your attendees ({attendees}) are below the minimum required ({minRequired} — 60% of capacity).
+                This will be submitted as a <strong>REQUEST</strong> and requires admin approval.
+              </div>
+            )}
+
+            {!overCapacity && !belowMinimum && attendees > 0 && (
+              <div style={{ color: '#34D399', fontSize: '0.85rem' }}>
+                ✅ Attendee count meets the minimum requirement. This will be submitted as a <strong>BOOKING</strong>.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── NEW: Booking type badge ── */}
+        {bookingTypeLabel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Submission type:</span>
+            <span style={{
+              fontSize: '0.75rem', fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+              background: bookingTypeLabel === 'BOOKING' ? 'rgba(52,211,153,0.18)' : 'rgba(251,191,36,0.18)',
+              color: bookingTypeLabel === 'BOOKING' ? '#34D399' : '#FBBF24',
+              border: bookingTypeLabel === 'BOOKING' ? '1px solid rgba(52,211,153,0.4)' : '1px solid rgba(251,191,36,0.4)',
+            }}>
+              {bookingTypeLabel === 'BOOKING' ? '📋 BOOKING' : '📩 REQUEST'}
+            </span>
+          </div>
+        )}
 
         <textarea
           className="form-input"
@@ -218,9 +312,12 @@ export default function BookingForm({
           <button
             className="btn-sm btn-sm--primary"
             type="submit"
-            disabled={submitting || hasOverlap || hasBasicInvalidTime}
+            // ── NEW: also disable when over capacity ──
+            disabled={submitting || overCapacity || hasOverlap || hasBasicInvalidTime}
           >
-            {submitting ? 'Saving...' : (isEdit ? 'Update Booking' : 'Submit Booking')}
+            {/* ── NEW: button label changes based on booking type ── */}
+            {submitting ? 'Saving...' : isEdit ? 'Update Booking'
+              : bookingTypeLabel === 'REQUEST' ? 'Submit Request' : 'Submit Booking'}
           </button>
 
           {isEdit && (
