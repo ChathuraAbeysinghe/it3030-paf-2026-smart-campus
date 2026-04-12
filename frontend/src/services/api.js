@@ -60,6 +60,15 @@ export const resourceService = {
     } catch (error) {
       throw new Error(getApiErrorMessage(error, 'Failed to delete resource'));
     }
+  },
+
+  updateStatus: async function (id, status) {
+    try {
+      var response = await api.patch('/api/resources/' + id + '/status', { status: status });
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to update resource status'));
+    }
   }
 };
 // ── Booking Service ──────────────────────────────────────
