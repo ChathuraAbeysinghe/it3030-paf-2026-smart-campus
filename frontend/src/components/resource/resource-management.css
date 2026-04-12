@@ -1,0 +1,160 @@
+.rm-admin-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 390px) 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.rm-form-card {
+  padding: 20px;
+}
+
+.rm-form-note {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.rm-form-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.rm-form-preview-image {
+  width: 66px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.rm-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.rm-resource-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rm-resource-mini-image {
+  width: 42px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.rm-resource-mini-icon {
+  font-size: 0.92rem;
+}
+
+.rm-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.rm-resource-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.rm-resource-image-wrap {
+  position: relative;
+  height: 160px;
+}
+
+.rm-resource-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rm-resource-icon-badge {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+}
+
+.rm-status-pill {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+.rm-status-pill--active {
+  color: #34D399;
+  background: rgba(52, 211, 153, 0.2);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.rm-status-pill--out {
+  color: #F87171;
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.rm-resource-body {
+  padding: 14px 16px 16px;
+}
+
+.rm-resource-type {
+  margin: 2px 0 8px;
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.rm-resource-desc {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.79rem;
+  line-height: 1.4;
+  min-height: 34px;
+}
+
+.rm-resource-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.rm-card-action {
+  width: auto;
+}
+
+@media (max-width: 980px) {
+  .rm-admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rm-resource-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
