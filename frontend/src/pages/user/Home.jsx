@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { bookingService, ticketService } from '../../services/api';
 import StatCard from '../../components/StatCard';
+import './dashboard.css';
 
 /**
  * Student Home — welcome + quick actions + summary cards.
@@ -11,6 +12,7 @@ export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({ bookings: 0, tickets: 0 });
+  const firstName = user?.name?.split(' ')[0] ?? 'Student';
 
   useEffect(() => {
     (async () => {
@@ -23,19 +25,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="page-content animate-in">
+    <div className="page-content dashboard-home animate-in">
       {/* Welcome Section */}
-      <div className="welcome-section glass-card">
+      <div className="welcome-section">
         <div className="welcome-text">
-          <h1>Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
-          <p>Here's what's happening on campus today. Manage your resources, bookings, and report issues all in one place.</p>
+          <p className="welcome-kicker">Student Dashboard</p>
+          <h1>Welcome back, {firstName} 👋</h1>
+          <p className="welcome-sub">
+            Same modern experience as the new homepage. Manage your resources, bookings, and report issues all in one place.
+          </p>
         </div>
-        <div className="welcome-avatar">
-          {user?.picture
-            ? <img src={user.picture} alt="" className="user-avatar" style={{ width: 72, height: 72 }} />
-            : <div className="user-avatar-placeholder" style={{ width: 72, height: 72, fontSize: '2rem' }}>{user?.name?.[0]}</div>
-          }
-        </div>
+        <img src="/sliit-campus-logo-.png" alt="" className="welcome-illustration" />
       </div>
 
       {/* Summary Cards */}
@@ -48,27 +48,32 @@ export default function Home() {
 
       {/* Quick Actions */}
       <div className="quick-actions" style={{ marginTop: 24 }}>
-        <h2 style={{ marginBottom: 16 }}>Quick Actions</h2>
+        <h2 className="section-title">What do you need today?</h2>
+        <p className="section-subtitle">Jump into the most used actions from your dashboard.</p>
         <div className="quick-actions-grid">
-          <button className="quick-action-card glass-card" onClick={() => navigate('/resources')}>
+          <button type="button" className="quick-action-card action-card" onClick={() => navigate('/resources')}>
             <span className="quick-action-icon">📚</span>
             <span className="quick-action-label">Book a Resource</span>
             <span className="quick-action-desc">Browse and reserve campus facilities</span>
+            <span className="card-link open-link">Open →</span>
           </button>
-          <button className="quick-action-card glass-card" onClick={() => navigate('/my-tickets')}>
+          <button type="button" className="quick-action-card action-card" onClick={() => navigate('/my-tickets')}>
             <span className="quick-action-icon">⚠️</span>
             <span className="quick-action-label">Report an Issue</span>
             <span className="quick-action-desc">Submit a maintenance request</span>
+            <span className="card-link open-link">Open →</span>
           </button>
-          <button className="quick-action-card glass-card" onClick={() => navigate('/my-bookings')}>
+          <button type="button" className="quick-action-card action-card" onClick={() => navigate('/my-bookings')}>
             <span className="quick-action-icon">📋</span>
             <span className="quick-action-label">View Bookings</span>
             <span className="quick-action-desc">Check your booking status</span>
+            <span className="card-link open-link">Open →</span>
           </button>
-          <button className="quick-action-card glass-card" onClick={() => navigate('/profile')}>
+          <button type="button" className="quick-action-card action-card" onClick={() => navigate('/profile')}>
             <span className="quick-action-icon">👤</span>
             <span className="quick-action-label">My Profile</span>
             <span className="quick-action-desc">View and manage your account</span>
+            <span className="card-link open-link">Open →</span>
           </button>
         </div>
       </div>
