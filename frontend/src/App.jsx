@@ -6,6 +6,7 @@ import ProtectedRoute             from './components/ProtectedRoute';
 import Login                      from './pages/Login';
 import Register                   from './pages/Register';
 import OAuthCallback              from './pages/OAuthCallback';
+import Homepage                   from './pages/Homepage';
 
 // Layouts
 import UserLayout                 from './layouts/UserLayout';
@@ -54,7 +55,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {/* ── Public ── */}
-          <Route path="/"              element={<RootRedirect />} />
+          <Route path="/"              element={<Homepage />} />
+          <Route path="/home"          element={<Homepage />} />
+          <Route path="/app"           element={<RootRedirect />} />
           <Route path="/login"         element={<Login />} />
           <Route path="/register"      element={<Register />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />

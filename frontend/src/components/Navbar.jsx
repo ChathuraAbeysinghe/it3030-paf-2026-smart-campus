@@ -1,80 +1,34 @@
-/**
- * Navbar.jsx
- * ─────────────────────────────────────────────────────────────────
- * Shared top navbar used by the USER (student) layout.
- * Admin / Technician use the Sidebar instead.
- * ─────────────────────────────────────────────────────────────────
- */
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import NotificationBell from './NotificationBell';
+import GuestNav from './navbar/GuestNav';
+import AuthNav from './navbar/AuthNav';
 
-const NAV_LINKS = [
-  { to: '/dashboard',   icon: '🏠', label: 'Home'      },
-  { to: '/resources',   icon: '📚', label: 'Resources'  },
-  { to: '/my-bookings', icon: '📅', label: 'Bookings'   },
-  { to: '/my-tickets',  icon: '🎫', label: 'Tickets'    },
-  { to: '/profile',     icon: '👤', label: 'Profile'    },
+const AUTH_ROUTES = [
+  '/dashboard',
+  '/resources',
+  '/my-bookings',
+  '/my-tickets',
+  '/profile',
+  '/admin',
+  '/technician',
 ];
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
+  const location = useLocation();
 
-  return (
-    <nav className="user-navbar glass-card">
-      {/* Brand */}
-      <div className="user-navbar-brand" onClick={() => navigate('/dashboard')}>
-        <img src="/sliit-campus-logo-.png" alt="SLIIT" className="user-navbar-logo" />
-        <span>SmartCampus</span>
-      </div>
+  const isAuthenticated = Boolean(user);
+  const useAuthNav = useMemo(() => {
+    if (!isAuthenticated) return false;
+    return AUTH_ROUTES.some((route) =>
+      location.pathname === route || location.pathname.startsWith(`${route}/`)
+    );
+  }, [isAuthenticated, location.pathname]);
 
-      {/* Links */}
-      <div className="user-navbar-links">
-        {NAV_LINKS.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `user-nav-link ${isActive ? 'user-nav-link--active' : ''}`
-            }
-          >
-            <span className="user-nav-icon">{icon}</span>
-            <span className="user-nav-label">{label}</span>
-          </NavLink>
-        ))}
-      </div>
+  if (loading) return null;
 
-      {/* Right section */}
-      <div className="user-navbar-right">
-        {/* ── Notification Bell (floating dropdown) ── */}
-        <NotificationBell role="USER" />
-
-        {/* ── User avatar ── */}
-        {user && (
-          <div
-            className="user-navbar-avatar"
-            onClick={() => navigate('/profile')}
-            title={user.name}
-          >
-            {user.picture ? (
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="user-avatar"
-                style={{ width: 34, height: 34 }}
-              />
-            ) : (
-              <div
-                className="user-avatar-placeholder"
-                style={{ width: 34, height: 34, fontSize: '0.85rem' }}
-              >
-                {user.name?.[0] ?? '?'}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </nav>
-  );
+  return useAuthNav
+    ? <AuthNav user={user} currentPath={location.pathname} onLogout={logout} />
+    : <GuestNav currentPath={location.pathname} />;
 }

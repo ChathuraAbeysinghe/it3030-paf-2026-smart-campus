@@ -41,10 +41,10 @@ export default function Profile() {
         <p>Manage your account settings and personal information.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 900 }}>
+      <div className="profile-grid">
 
         {/* ── Profile Info Card ── */}
-        <div className="glass-card" style={{ padding: 28 }}>
+        <div className="glass-card profile-panel" style={{ padding: 28 }}>
           <h3 style={{ marginBottom: 20 }}>Account Information</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
             {user?.picture
@@ -81,16 +81,16 @@ export default function Profile() {
           </div>
 
           <button
-            className="btn-primary"
+            className="btn-primary btn-danger"
             onClick={logout}
-            style={{ marginTop: 24, background: 'rgba(248,113,113,0.12)', borderColor: 'rgba(248,113,113,0.3)', color: '#F87171' }}
+            style={{ marginTop: 24 }}
           >
             🚪 Sign Out
           </button>
         </div>
 
         {/* ── Change Password Card ── */}
-        <div className="glass-card" style={{ padding: 28 }}>
+        <div className="glass-card profile-panel" style={{ padding: 28 }}>
           <h3 style={{ marginBottom: 6 }}>Change Password</h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 20 }}>
             {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN')
