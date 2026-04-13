@@ -55,7 +55,11 @@ export default function BookingForm({
   }, [selectedResource]);
 
   useEffect(() => {
-    setForm(normalizeBooking(initialBooking));
+    const normalized = normalizeBooking(initialBooking);
+    if (!normalized.facilityId && selectedResource && selectedResource.id) {
+      normalized.facilityId = selectedResource.id;
+    }
+    setForm(normalized);
     setError('');
   }, [initialBooking]);
 
@@ -228,22 +232,25 @@ export default function BookingForm({
         )}
 
         {/* ── Date + Time row ─────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
           <div className="form-group">
-            <label className="form-label">Date *</label>
-            <div className="form-input-wrapper">
-              <span className="form-input-icon">📅</span>
-              <input
-                className="form-input"
-                type="date"
-                value={form.date}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={e => onChange('date', e.target.value)}
-                required
-              />
-            </div>
+        {/* ── Availability checker ────────────────────────────── */}
+        {loadingConflicts ? (
+          <div className="glass-card" style={{ color: 'var(--text-muted)', padding: '10px 14px' }}>
+            Checking availability...
+          </div>
+        ) : (
+          <AvailabilityChecker
+            conflicts={conflicts}
+            startTime={form.startTime}
+            endTime={form.endTime}
+            excludeBookingId={initialBooking ? initialBooking.id : null}
+            selectedDate={form.date}
+            onDateSelect={val => onChange('date', val)}
+          />
+        )}
           </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>  
           <div className="form-group">
             <label className="form-label">Start Time *</label>
             <div className="form-input-wrapper">
@@ -358,21 +365,6 @@ export default function BookingForm({
           </div>
         </div>
 
-        {/* ── Availability checker ────────────────────────────── */}
-        {loadingConflicts ? (
-          <div className="glass-card" style={{ color: 'var(--text-muted)', padding: '10px 14px' }}>
-            Checking availability...
-          </div>
-        ) : (
-          <AvailabilityChecker
-            conflicts={conflicts}
-            startTime={form.startTime}
-            endTime={form.endTime}
-            excludeBookingId={initialBooking ? initialBooking.id : null}
-            selectedDate={form.date}
-            onDateSelect={val => onChange('date', val)}
-          />
-        )}
 
         {/* ── Submit row ──────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
