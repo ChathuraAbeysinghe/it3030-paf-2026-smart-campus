@@ -32,7 +32,6 @@ public class BookingResponse {
     private BookingStatus status;
     private BookingType bookingType;
     private String adminNotes;
-
     private String qrCode;
 
     private Instant createdAt;

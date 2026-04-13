@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
- 
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -29,7 +29,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingService {
 
-    private static final Set<BookingStatus> BLOCKING_STATUSES = Set.of(BookingStatus.PENDING, BookingStatus.APPROVED);
+    private static final Set<BookingStatus> BLOCKING_STATUSES =
+            Set.of(BookingStatus.PENDING, BookingStatus.APPROVED);
+
     private static final double MIN_OCCUPANCY_RATIO = 0.6;
 
     private final BookingRepository bookingRepository;
@@ -49,14 +51,14 @@ public class BookingService {
         }
 
         Set<String> facilityIds = bookings.stream().map(Booking::getFacilityId).collect(Collectors.toSet());
-        Set<String> userIds     = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
+        Set<String> userIds = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
 
-        Map<String, String> facilityNames = resourceRepository.findAllById(facilityIds)
-                .stream().collect(Collectors.toMap(Resource::getId, Resource::getName));
+        Map<String, Resource> facilityMap = resourceRepository.findAllById(facilityIds)
+                .stream().collect(Collectors.toMap(Resource::getId, r -> r));
         Map<String, String> userNames = userRepository.findAllById(userIds)
                 .stream().collect(Collectors.toMap(User::getId, User::getName));
 
-        return bookings.stream().map(b -> toResponse(b, facilityNames, userNames)).toList();
+        return bookings.stream().map(b -> toResponse(b, facilityMap, userNames)).toList();
     }
 
     public BookingResponse getById(User actor, String id) {
@@ -68,6 +70,8 @@ public class BookingService {
     public BookingResponse create(User actor, BookingRequest request) {
         validateRequest(request);
         Resource facility = getFacilityOrThrow(request.getFacilityId());
+        validateCapacity(request.getAttendees(), facility);
+        BookingType bookingType = resolveBookingType(request.getAttendees(), facility.getCapacity());
 
         List<Booking> conflicts = findConflicts(
                 request.getFacilityId(),
@@ -79,7 +83,8 @@ public class BookingService {
         );
 
         if (!conflicts.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Requested time slot conflicts with an existing booking");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Requested time slot conflicts with an existing booking");
         }
 
         Instant now = Instant.now();
@@ -92,6 +97,7 @@ public class BookingService {
                 .purpose(request.getPurpose().trim())
                 .expectedAttendees(request.getAttendees())
                 .status(BookingStatus.PENDING)
+                .bookingType(bookingType)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -104,7 +110,10 @@ public class BookingService {
         Booking existing = getByIdOrThrow(id);
         ensureOwnerOrAdmin(actor, existing);
         ensurePending(existing);
-        getFacilityOrThrow(request.getFacilityId());
+
+        Resource facility = getFacilityOrThrow(request.getFacilityId());
+        validateCapacity(request.getAttendees(), facility);
+        BookingType bookingType = resolveBookingType(request.getAttendees(), facility.getCapacity());
 
         List<Booking> conflicts = findConflicts(
                 request.getFacilityId(),
@@ -116,7 +125,8 @@ public class BookingService {
         );
 
         if (!conflicts.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Requested time slot conflicts with an existing booking");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Requested time slot conflicts with an existing booking");
         }
 
         existing.setFacilityId(request.getFacilityId().trim());
@@ -125,12 +135,12 @@ public class BookingService {
         existing.setEndTime(request.getEndTime());
         existing.setPurpose(request.getPurpose().trim());
         existing.setExpectedAttendees(request.getAttendees());
+        existing.setBookingType(bookingType);
         existing.setUpdatedAt(Instant.now());
 
         return toResponse(bookingRepository.save(existing));
     }
 
-    //Generate QR code on approve
     public BookingResponse approve(User actor, String id, String adminNotes) {
         ensureAdmin(actor);
         Booking booking = getByIdOrThrow(id);
@@ -146,12 +156,12 @@ public class BookingService {
         );
 
         if (!approvedConflicts.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot approve due to existing approved booking conflict");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot approve due to existing approved booking conflict");
         }
 
         booking.setStatus(BookingStatus.APPROVED);
         booking.setAdminNotes(normalizeNote(adminNotes));
-        //Set QR code when approved
         booking.setQrCode("QR-" + id.substring(0, 8).toUpperCase() + "-" + LocalDate.now().getYear());
         booking.setUpdatedAt(Instant.now());
 
@@ -175,7 +185,6 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
-    //Allow PENDING bookings to be cancelled by owner
     public BookingResponse cancel(User actor, String id) {
         Booking booking = getByIdOrThrow(id);
         ensureOwnerOrAdmin(actor, booking);
@@ -186,7 +195,6 @@ public class BookingService {
                     "Booking is already " + booking.getStatus().name().toLowerCase());
         }
 
-        // Only admin can cancel an already-approved booking
         if (booking.getStatus() == BookingStatus.APPROVED) {
             ensureAdmin(actor);
         }
@@ -217,27 +225,25 @@ public class BookingService {
                 .toList();
     }
 
-     //attendees cannot exceed resource capacity
     private void validateCapacity(int attendees, Resource facility) {
         if (facility.getCapacity() != null && attendees > facility.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Attendees (" + attendees + ") exceed the capacity of "
-                    + facility.getName() + " (" + facility.getCapacity() + ")");
+                            + facility.getName() + " (" + facility.getCapacity() + ")");
         }
     }
- 
-    // BOOKING = attendees >= 60%, REQUEST = below 60%
+
     private BookingType resolveBookingType(int attendees, Integer capacity) {
         if (capacity == null || capacity == 0) return BookingType.BOOKING;
         int minRequired = (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
         return attendees >= minRequired ? BookingType.BOOKING : BookingType.REQUEST;
     }
- 
+
     private int computeMinRequired(Integer capacity) {
         if (capacity == null || capacity == 0) return 1;
         return (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
     }
- 
+
     private void validateTimes(BookingRequest request) {
         if (request.getStartTime() != null && request.getEndTime() != null
                 && !request.getStartTime().isBefore(request.getEndTime())) {
@@ -289,13 +295,15 @@ public class BookingService {
     private void ensureOwnerOrAdmin(User actor, Booking booking) {
         if (actor.getRole() == Role.ADMIN) return;
         if (!booking.getUserId().equals(actor.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this booking");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You do not have permission to access this booking");
         }
     }
 
     private void ensurePending(Booking booking) {
         if (booking.getStatus() != BookingStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking can only be modified while PENDING");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Booking can only be modified while PENDING");
         }
     }
 
@@ -305,13 +313,14 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    //used create/update/approve/reject/cancel
-    private BookingResponse toResponse(Booking booking) {
-        Resource facility   = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+    private BookingResponse toResponse(
+            Booking booking,
+            Map<String, Resource> facilityMap,
+            Map<String, String> userNames
+    ) {
+        Resource facility = facilityMap.get(booking.getFacilityId());
         String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
-        Integer capacity    = facility != null ? facility.getCapacity() : null;
-        String userName     = userRepository.findById(booking.getUserId())
-                .map(User::getName).orElse(booking.getUserId());
+        Integer capacity = facility != null ? facility.getCapacity() : null;
 
         return BookingResponse.builder()
                 .id(booking.getId())
@@ -320,7 +329,7 @@ public class BookingService {
                 .facilityCapacity(capacity)
                 .minimumAttendeesRequired(computeMinRequired(capacity))
                 .userId(booking.getUserId())
-                .userName(userName)
+                .userName(userNames.getOrDefault(booking.getUserId(), booking.getUserId()))
                 .date(booking.getDate())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
@@ -335,14 +344,12 @@ public class BookingService {
                 .build();
     }
 
-    // Overload for batch retrieval with pre-fetched names
-    private BookingResponse toResponse(Booking booking, Map<String, String> facilityNames, Map<String, String> userNames) {
-        String facilityName = facilityNames.getOrDefault(booking.getFacilityId(), booking.getFacilityId());
-        String userName     = userNames.getOrDefault(booking.getUserId(), booking.getUserId());
-
-        // Need to fetch capacity for minimum attendees calculation
+    private BookingResponse toResponse(Booking booking) {
         Resource facility = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+        String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
         Integer capacity = facility != null ? facility.getCapacity() : null;
+        String userName = userRepository.findById(booking.getUserId())
+                .map(User::getName).orElse(booking.getUserId());
 
         return BookingResponse.builder()
                 .id(booking.getId())

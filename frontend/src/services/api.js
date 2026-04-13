@@ -59,6 +59,69 @@ function getStoredUser() {
   }
 }
 
+function shouldHydrateBookingName(booking) {
+  if (!booking) return false;
+  var id = booking.facilityId || booking.resourceId;
+  if (!id) return false;
+  var current = booking.facilityName || booking.resourceName;
+  return !current || current === id;
+}
+
+async function getResourceNameMap() {
+  var resources = [];
+  try {
+    resources = (await api.get('/api/resources')).data || [];
+  } catch {
+    resources = mockResources;
+  }
+
+  return resources.reduce(function (acc, resource) {
+    if (resource && resource.id && resource.name) {
+      acc[resource.id] = resource.name;
+    }
+    return acc;
+  }, {});
+}
+
+async function hydrateBookingsWithResourceNames(rows) {
+  var bookings = Array.isArray(rows) ? rows : [];
+  if (bookings.length === 0) return bookings;
+
+  var needsHydration = bookings.some(shouldHydrateBookingName);
+  if (!needsHydration) return bookings;
+
+  var nameMap = await getResourceNameMap();
+
+  return bookings.map(function (booking) {
+    if (!booking) return booking;
+
+    var id = booking.facilityId || booking.resourceId;
+    if (!id) return booking;
+
+    var resolvedName = nameMap[id];
+    if (!resolvedName) return booking;
+
+    var next = { ...booking };
+    if (!next.facilityName || next.facilityName === id) {
+      next.facilityName = resolvedName;
+    }
+    if (!next.resourceName || next.resourceName === id) {
+      next.resourceName = resolvedName;
+    }
+    if (!next.resourceId && next.facilityId) {
+      next.resourceId = next.facilityId;
+    }
+
+    return next;
+  });
+}
+
+async function hydrateSingleBookingWithResourceName(booking) {
+  if (!booking) return booking;
+  var rows = await hydrateBookingsWithResourceNames([booking]);
+  return rows[0] || booking;
+}
+
 // Resource Service
 export const resourceService = {
   getAll: async function (filters) {
@@ -121,10 +184,11 @@ export const bookingService = {
   getAll: async (filters) => {
     var safeFilters = filters || {};
     try {
-      return (await api.get('/api/bookings', { params: safeFilters })).data;
+      var rows = (await api.get('/api/bookings', { params: safeFilters })).data;
+      return hydrateBookingsWithResourceNames(rows);
     } catch {
       var currentUser = getStoredUser();
-      var rows = [...mockBookings];
+      let rows = [...mockBookings];
 
       if (currentUser && currentUser.role !== 'ADMIN') {
         rows = rows.filter(function (b) { return b.userId === currentUser.id; });
@@ -132,15 +196,17 @@ export const bookingService = {
       if (safeFilters.status && safeFilters.status !== 'ALL') {
         rows = rows.filter(function (b) { return b.status === safeFilters.status; });
       }
-      return rows;
+      return hydrateBookingsWithResourceNames(rows);
     }
   },
 
   getById: async (id) => {
     try {
-      return (await api.get('/api/bookings/' + id)).data;
+      var booking = (await api.get('/api/bookings/' + id)).data;
+      return hydrateSingleBookingWithResourceName(booking);
     } catch {
-      return mockBookings.find(function (b) { return b.id === id; }) || null;
+      var booking = mockBookings.find(function (b) { return b.id === id; }) || null;
+      return hydrateSingleBookingWithResourceName(booking);
     }
   },
 
@@ -155,7 +221,8 @@ export const bookingService = {
 
   create: async (data) => {
     try {
-      return (await api.post('/api/bookings', data)).data;
+      var created = (await api.post('/api/bookings', data)).data;
+      return hydrateSingleBookingWithResourceName(created);
     } catch (error) {
       var facilityId = data.facilityId || data.resourceId;
       var conflicts = await bookingService.getFacilityConflicts(facilityId, data.date);
@@ -191,13 +258,14 @@ export const bookingService = {
       };
       mockBookings.push(nb);
       saveBookingsToStorage(mockBookings); // ← PERSIST TO STORAGE
-      return nb;
+      return hydrateSingleBookingWithResourceName(nb);
     }
   },
 
   update: async (id, data) => {
     try {
-      return (await api.put('/api/bookings/' + id, data)).data;
+      var updated = (await api.put('/api/bookings/' + id, data)).data;
+      return hydrateSingleBookingWithResourceName(updated);
     } catch (error) {
       var booking = mockBookings.find(function (b) { return b.id === id; });
       if (!booking) throw new Error('Booking not found');
@@ -227,13 +295,14 @@ export const bookingService = {
       booking.updatedAt = new Date().toISOString();
       
       saveBookingsToStorage(mockBookings); // ← PERSIST TO STORAGE
-      return booking;
+      return hydrateSingleBookingWithResourceName(booking);
     }
   },
 
   approve: async (id, adminNotes) => {
     try {
-      return (await api.patch('/api/bookings/' + id + '/approve', { adminNotes: adminNotes || '' })).data;
+      var updated = (await api.patch('/api/bookings/' + id + '/approve', { adminNotes: adminNotes || '' })).data;
+      return hydrateSingleBookingWithResourceName(updated);
     } catch {
       var booking = mockBookings.find(function (b) { return b.id === id; });
       if (!booking) throw new Error('Booking not found');
@@ -244,13 +313,14 @@ export const bookingService = {
       booking.updatedAt = new Date().toISOString();
       
       saveBookingsToStorage(mockBookings); // ← PERSIST TO STORAGE
-      return booking;
+      return hydrateSingleBookingWithResourceName(booking);
     }
   },
 
   reject: async (id, reason) => {
     try {
-      return (await api.patch('/api/bookings/' + id + '/reject', { adminNotes: reason })).data;
+      var updated = (await api.patch('/api/bookings/' + id + '/reject', { adminNotes: reason })).data;
+      return hydrateSingleBookingWithResourceName(updated);
     } catch {
       var booking = mockBookings.find(function (b) { return b.id === id; });
       if (!booking) throw new Error('Booking not found');
@@ -261,30 +331,34 @@ export const bookingService = {
       booking.updatedAt = new Date().toISOString();
       
       saveBookingsToStorage(mockBookings); // ← PERSIST TO STORAGE
-      return booking;
+      return hydrateSingleBookingWithResourceName(booking);
     }
   },
 
   cancel: async (id) => {
     try {
-      return (await api.patch('/api/bookings/' + id + '/cancel')).data;
+      var updated = (await api.patch('/api/bookings/' + id + '/cancel')).data;
+      return hydrateSingleBookingWithResourceName(updated);
     } catch {
       var booking = mockBookings.find(function (b) { return b.id === id; });
       if (!booking) throw new Error('Booking not found');
-      if (booking.status !== 'APPROVED') throw new Error('Only approved bookings can be cancelled');
+      if (booking.status === 'CANCELLED' || booking.status === 'REJECTED') {
+        throw new Error('Booking is already ' + booking.status.toLowerCase());
+      }
       booking.status = 'CANCELLED';
       booking.updatedAt = new Date().toISOString();
       
       saveBookingsToStorage(mockBookings); // ← PERSIST TO STORAGE
-      return booking;
+      return hydrateSingleBookingWithResourceName(booking);
     }
   },
 
   getFacilityConflicts: async (facilityId, date) => {
     try {
-      return (await api.get('/api/bookings/facility/' + facilityId + '/conflicts', { params: { date: date } })).data;
+      var rows = (await api.get('/api/bookings/facility/' + facilityId + '/conflicts', { params: { date: date } })).data;
+      return hydrateBookingsWithResourceNames(rows);
     } catch {
-      return mockBookings
+      var rows = mockBookings
         .filter(function (b) {
           var currentFacility = b.facilityId || b.resourceId;
           return currentFacility === facilityId
@@ -292,6 +366,8 @@ export const bookingService = {
             && (b.status === 'PENDING' || b.status === 'APPROVED');
         })
         .sort(function (a, b) { return toMinutes(a.startTime) - toMinutes(b.startTime); });
+
+      return hydrateBookingsWithResourceNames(rows);
     }
   },
 
