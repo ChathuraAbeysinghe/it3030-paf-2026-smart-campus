@@ -3,25 +3,53 @@
    Palette: #222831 / #393E46 / #00ADB5 / #EEEEEE
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap');
 
 /* ── Reset & Base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #222831;
-  --card:      #393E46;
-  --primary:   #00ADB5;
+  /* Brand */
+  --color-navy: #1B2A4A;
+  --color-navy-deep: #0f1825;
+  --color-yellow: #F5A623;
+  --color-yellow-hover: #D4891A;
+
+  /* Backgrounds */
+  --color-page-bg: #F4F6FA;
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #E2E8F0;
+
+  /* Text */
+  --color-text-primary: #1B2A4A;
+  --color-text-secondary: #6B7A99;
+  --color-text-muted: #A0AABF;
+
+  /* Semantic */
+  --color-success: #2DBD87;
+  --color-warning: #F5A623;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Shape + Elevation */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Legacy aliases (kept for existing components) */
+  --bg: #222831;
+  --card: #393E46;
+  --primary: #00ADB5;
   --primary-dim: rgba(0, 173, 181, 0.15);
   --primary-glow: rgba(0, 173, 181, 0.45);
-  --text:      #EEEEEE;
-  --text-muted:#9CA3AF;
-  --border:    rgba(255,255,255,0.15);
-  --glass:     rgba(255, 255, 255, 0.06);
-  --shadow:    0 8px 32px rgba(0,0,0,0.45);
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
+  --text: #EEEEEE;
+  --text-muted: #9CA3AF;
+  --border: rgba(255, 255, 255, 0.15);
+  --glass: rgba(255, 255, 255, 0.06);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 
 html, body, #root {
@@ -33,9 +61,9 @@ html, body, #root {
 }
 
 /* ── Typography ───────────────────────────────────────────── */
-h1 { font-size: 2rem;   font-weight: 800; letter-spacing: -0.5px; }
-h2 { font-size: 1.5rem; font-weight: 700; }
-h3 { font-size: 1.2rem; font-weight: 600; }
+h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; font-family: 'Montserrat', sans-serif; }
+h2 { font-size: 1.5rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+h3 { font-size: 1.2rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
 p  { line-height: 1.6; color: var(--text-muted); }
 
 /* ── Glassmorphism Card ───────────────────────────────────── */
@@ -1728,4 +1756,318 @@ select.form-input option {
   top: auto;
   bottom: 20px;
   transform-origin: bottom left;
+}
+
+/* ================================================================
+   USER PAGE CONSISTENCY OVERRIDES (post-login pages)
+   ================================================================ */
+
+.user-layout {
+  min-height: 100vh;
+  background: var(--color-page-bg);
+}
+
+.user-main {
+  --primary: var(--color-yellow);
+  --primary-dim: rgba(245, 166, 35, 0.14);
+  --primary-glow: rgba(245, 166, 35, 0.35);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-secondary);
+  --border: var(--color-card-border);
+  --glass: var(--color-card-bg);
+  --shadow: var(--shadow-card);
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.user-main .page-content {
+  max-width: 1200px;
+  display: grid;
+  gap: 32px;
+}
+
+.user-main .content-header,
+.user-main .page-header {
+  margin-bottom: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.user-main .content-header h1,
+.user-main .page-header h1 {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.user-main .content-header p,
+.user-main .page-header p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.user-main .glass-card,
+.user-main .stat-card,
+.user-main .quick-action-card,
+.user-main .ticket-card,
+.user-main .booking-card,
+.user-main .profile-field,
+.user-main .filter-bar {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.user-main .welcome-section {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.user-main .stats-grid {
+  margin-bottom: 0;
+  gap: 16px;
+}
+
+.user-main .stat-card {
+  padding: 20px 24px;
+  min-height: unset;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.user-main .stat-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.user-main .stat-card .stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1;
+  margin: 10px 0 6px;
+  color: var(--color-text-primary) !important;
+}
+
+.user-main .stat-card .stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.user-main .section-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.user-main .section-subtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.user-main .action-card,
+.user-main .quick-action-card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  text-align: center;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.user-main .action-card:hover,
+.user-main .quick-action-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px);
+  border-color: var(--color-yellow);
+}
+
+.user-main .open-link,
+.user-main .card-link {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.user-main .action-card:hover .open-link,
+.user-main .quick-action-card:hover .card-link {
+  color: var(--color-yellow);
+}
+
+.user-main .btn-primary {
+  background: var(--color-yellow);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-yellow);
+  border-radius: 100px;
+  padding: 10px 24px;
+  font-weight: 700;
+  width: auto;
+}
+
+.user-main .btn-primary:hover {
+  background: var(--color-yellow-hover);
+  border-color: var(--color-yellow-hover);
+  color: var(--color-text-primary);
+  box-shadow: none;
+}
+
+.user-main .btn-secondary {
+  background: transparent;
+  border: 1.5px solid var(--color-navy);
+  color: var(--color-navy);
+  border-radius: 100px;
+  padding: 10px 24px;
+}
+
+.user-main .btn-secondary:hover {
+  background: rgba(27, 42, 74, 0.06);
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+}
+
+.user-main .btn-ghost {
+  background: transparent;
+  border: 0;
+  color: var(--color-yellow);
+  padding: 10px 12px;
+}
+
+.user-main .btn-ghost:hover {
+  text-decoration: underline;
+}
+
+.user-main .btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+.user-main .btn-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #FFFFFF;
+}
+
+.user-main .form-input-wrapper {
+  background: #FFFFFF;
+  border: 1px solid var(--color-card-border);
+  box-shadow: none;
+}
+
+.user-main .form-input-wrapper:focus-within {
+  border-color: rgba(245, 166, 35, 0.7);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.16);
+  background: #FFFFFF;
+}
+
+.user-main .form-input,
+.user-main select.form-input,
+.user-main textarea.form-input {
+  color: var(--color-text-primary);
+}
+
+.user-main .form-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.user-main .filter-chip {
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-card-border);
+}
+
+.user-main .filter-chip--active {
+  color: var(--color-text-primary);
+  border-color: rgba(245, 166, 35, 0.55);
+  background: rgba(245, 166, 35, 0.16);
+}
+
+.user-main .glass-table th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.user-main .glass-table td {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  padding: 14px 16px;
+  border-bottom: 1px solid #F4F6FA;
+}
+
+.user-main .glass-table tbody tr:hover td {
+  background: #F8F9FB;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.badge-active {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+.badge-pending {
+  background: #FFFBEB;
+  color: #92400E;
+}
+
+.badge-rejected {
+  background: #FEF2F2;
+  color: #991B1B;
+}
+
+.badge-open {
+  background: #EFF6FF;
+  color: #1E40AF;
+}
+
+.user-main .profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 980px;
+}
+
+.user-main .profile-panel {
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 768px) {
+  .user-main {
+    padding: 24px 16px;
+  }
+
+  .user-main .content-header h1,
+  .user-main .page-header h1 {
+    font-size: 24px;
+  }
+
+  .user-main .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
