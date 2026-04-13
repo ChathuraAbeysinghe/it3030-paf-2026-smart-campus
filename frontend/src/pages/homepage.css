@@ -53,12 +53,16 @@ html {
   left: 0;
   right: 0;
   z-index: 120;
-  background: var(--hp-color-navy);
-  transition: box-shadow 220ms ease;
+  background: rgba(27, 42, 74, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 300ms ease;
 }
 
 .hp-navbar.is-scrolled {
   box-shadow: var(--hp-shadow-nav);
+  background: rgba(27, 42, 74, 0.95);
 }
 
 .hp-navbar__inner {
@@ -209,8 +213,10 @@ html {
 }
 
 .hp-btn--ghost {
-  background: rgba(27, 42, 74, 0.45);
-  border: 1.2px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--hp-color-white);
   height: 52px;
   padding: 0 30px;
@@ -275,7 +281,9 @@ html {
 .hp-hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, rgba(14, 25, 50, 0.88) 0%, var(--hp-color-overlay) 46%, rgba(27, 42, 74, 0.22) 100%);
+  background: linear-gradient(135deg, rgba(14, 25, 50, 0.92) 0%, rgba(27, 42, 74, 0.6) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .hp-hero__content {
@@ -315,7 +323,10 @@ html {
 }
 
 .hp-hero h1 span {
-  color: var(--hp-color-primary);
+  background: linear-gradient(90deg, #FFFFFF 0%, var(--hp-color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hp-hero p {
@@ -362,12 +373,20 @@ html {
 }
 
 .hp-stat-card {
-  background: var(--hp-color-white);
-  border: 1px solid var(--hp-color-border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--hp-radius-lg);
-  box-shadow: var(--hp-shadow-card);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
   padding: 24px;
   animation: hpFadeUp 0.55s ease both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hp-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 .hp-stat-card__icon {
@@ -442,10 +461,12 @@ html {
 }
 
 .hp-action-card {
-  background: var(--hp-color-white);
-  border: 1px solid var(--hp-color-border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--hp-radius-lg);
-  box-shadow: var(--hp-shadow-card);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
   padding: 24px;
   display: grid;
   gap: 10px;
@@ -453,8 +474,8 @@ html {
 }
 
 .hp-action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--hp-shadow-hover);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(27, 42, 74, 0.08);
 }
 
 .hp-action-card__icon {
@@ -499,11 +520,14 @@ html {
 }
 
 .hp-step {
-  border: 1px solid var(--hp-color-border);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--hp-radius-lg);
-  background: #FAFCFF;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 24px;
   text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
 .hp-step__icon-wrap {
@@ -563,10 +587,12 @@ html {
 }
 
 .hp-panel {
-  background: var(--hp-color-white);
-  border: 1px solid var(--hp-color-border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--hp-radius-lg);
-  box-shadow: var(--hp-shadow-card);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
   padding: 22px;
 }
 
@@ -584,13 +610,16 @@ html {
 
 .hp-feed__item,
 .hp-events__item {
-  border: 1px solid var(--hp-color-border);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 12px;
-  background: #FCFDFF;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 12px;
   display: grid;
   gap: 8px;
   align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
 .hp-feed__item {
