@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { bookingService } from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
 import BookingApprovalPanel from '../../components/BookingApprovalPanel';
@@ -6,6 +6,42 @@ import GlassModal from '../../components/GlassModal';
 
 const STATUS_FILTERS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
 
+const STATUS_COLORS = {
+  PENDING:   '#FBBF24',
+  APPROVED:  '#34D399',
+  REJECTED:  '#F87171',
+  CANCELLED: '#6B7280',
+};
+
+// ── Date helpers ──────────────────────────────────────────────────
+function toDateStr(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function buildDateStrip(n = 37) {
+  const days = [];
+  const start = new Date();
+  start.setDate(start.getDate() - 7); // 1 week back
+  for (let i = 0; i < n; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    days.push(toDateStr(d));
+  }
+  return days;
+}
+
+function fmtDate(str) {
+  if (!str) return '';
+  return new Date(str + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
+}
+
+function isToday(str) {
+  return str === toDateStr(new Date());
+}
+
+// ─────────────────────────────────────────────────────────────────
 export default function ManageBookings() {
   const [bookings,    setBookings]    = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -17,6 +53,12 @@ export default function ManageBookings() {
   const [dateTo,      setDateTo]      = useState('');
   const [detailModal, setDetailModal] = useState(null);
   const [view,        setView]        = useState('table'); // 'table' | 'panel'
+
+  // ── NEW: selected date from strip ──
+  const [selectedDate, setSelectedDate] = useState(toDateStr(new Date()));
+  const [useDateStrip, setUseDateStrip] = useState(true); // toggle between strip and range
+
+  const dateStrip = useMemo(() => buildDateStrip(37), []);
 
   useEffect(() => { load(); }, []);
 
@@ -61,24 +103,51 @@ export default function ManageBookings() {
   };
 
   // ── Filtering ─────────────────────────────────────────────────
-  const filtered = bookings.filter(b => {
-    if (filter !== 'ALL' && b.status !== filter) return false;
-    const term = search.toLowerCase();
-    if (term) {
-      const hay = [b.facilityName, b.resourceName, b.userName, b.purpose].join(' ').toLowerCase();
-      if (!hay.includes(term)) return false;
+  const filtered = useMemo(() => {
+    let rows = bookings;
+
+    // Date filter — strip mode or range mode
+    if (useDateStrip) {
+      rows = rows.filter(b => b.date === selectedDate);
+    } else {
+      if (dateFrom) rows = rows.filter(b => b.date >= dateFrom);
+      if (dateTo)   rows = rows.filter(b => b.date <= dateTo);
     }
-    if (dateFrom && b.date < dateFrom) return false;
-    if (dateTo   && b.date > dateTo)   return false;
-    return true;
-  });
+
+    if (filter !== 'ALL') rows = rows.filter(b => b.status === filter);
+
+    const term = search.toLowerCase().trim();
+    if (term) {
+      rows = rows.filter(b => {
+        const hay = [b.facilityName, b.resourceName, b.userName, b.purpose].join(' ').toLowerCase();
+        return hay.includes(term);
+      });
+    }
+
+    return rows;
+  }, [bookings, selectedDate, useDateStrip, dateFrom, dateTo, filter, search]);
 
   const pendingBookings = bookings.filter(b => b.status === 'PENDING');
 
-  const counts = bookings.reduce((acc, b) => {
-    acc[b.status] = (acc[b.status] || 0) + 1;
-    return acc;
-  }, {});
+  // Stats for selected date (strip mode) or all (range mode)
+  const statsBase = useMemo(() =>
+    useDateStrip ? bookings.filter(b => b.date === selectedDate) : bookings,
+  [bookings, selectedDate, useDateStrip]);
+
+  const counts = useMemo(() =>
+    statsBase.reduce((acc, b) => {
+      acc[b.status] = (acc[b.status] || 0) + 1;
+      return acc;
+    }, {}),
+  [statsBase]);
+
+  // Booking count per date for strip indicators
+  const bookingsByDate = useMemo(() =>
+    bookings.reduce((acc, b) => {
+      if (b.date) acc[b.date] = (acc[b.date] || 0) + 1;
+      return acc;
+    }, {}),
+  [bookings]);
 
   return (
     <div className="animate-in">
@@ -89,7 +158,7 @@ export default function ManageBookings() {
           <h1>Manage Bookings</h1>
           <p>Review all booking requests and process pending approvals.</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             className={`filter-chip ${view === 'table' ? 'filter-chip--active' : ''}`}
             onClick={() => setView('table')}
@@ -114,7 +183,9 @@ export default function ManageBookings() {
               </span>
             )}
           </button>
-          <button className="btn-sm" onClick={load}>🔄 Refresh</button>
+          <button className="btn-sm" onClick={load} disabled={loading}>
+            🔄 Refresh
+          </button>
         </div>
       </div>
 
@@ -131,24 +202,142 @@ export default function ManageBookings() {
       )}
 
       {/* ── Stat chips ────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
         {[
-          { label: 'Total',     value: bookings.length,         color: 'var(--primary)' },
-          { label: 'Pending',   value: counts.PENDING   || 0,   color: '#FBBF24' },
-          { label: 'Approved',  value: counts.APPROVED  || 0,   color: '#34D399' },
-          { label: 'Rejected',  value: counts.REJECTED  || 0,   color: '#F87171' },
-          { label: 'Cancelled', value: counts.CANCELLED || 0,   color: '#9CA3AF' },
+          { label: 'Total',     value: statsBase.length,         color: 'var(--primary)' },
+          { label: 'Pending',   value: counts.PENDING   || 0,    color: '#FBBF24' },
+          { label: 'Approved',  value: counts.APPROVED  || 0,    color: '#34D399' },
+          { label: 'Rejected',  value: counts.REJECTED  || 0,    color: '#F87171' },
+          { label: 'Cancelled', value: counts.CANCELLED || 0,    color: '#9CA3AF' },
         ].map(s => (
-          <div key={s.label} className="glass-card" style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            key={s.label}
+            className="glass-card"
+            style={{
+              padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 8,
+              cursor: 'pointer',
+              border: (filter === s.label.toUpperCase() || (s.label === 'Total' && filter === 'ALL'))
+                ? `1px solid ${s.color}`
+                : '1px solid rgba(255,255,255,0.08)',
+            }}
+            onClick={() => setFilter(s.label === 'Total' ? 'ALL' : s.label.toUpperCase())}
+          >
             <span style={{ fontSize: '1.1rem', fontWeight: 700, color: s.color }}>{s.value}</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</span>
           </div>
         ))}
       </div>
 
+      {/* ── Date selector toggle ──────────────────────────────── */}
+      <div className="glass-card" style={{ padding: '12px 16px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+            📅 {useDateStrip ? fmtDate(selectedDate) : 'Date Range Filter'}
+          </span>
+          <button
+            className="btn-sm"
+            style={{ fontSize: '0.75rem' }}
+            onClick={() => {
+              setUseDateStrip(v => !v);
+              setDateFrom('');
+              setDateTo('');
+            }}
+          >
+            {useDateStrip ? '📆 Switch to Range' : '📅 Switch to Day View'}
+          </button>
+        </div>
+
+        {/* ── Date strip ── */}
+        {useDateStrip && (
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'thin' }}>
+            {dateStrip.map(d => {
+              const day        = new Date(d + 'T00:00:00');
+              const dayLabel   = day.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayNum     = day.getDate();
+              const isSelected = d === selectedDate;
+              const count      = bookingsByDate[d] || 0;
+              const hasPending = bookings.some(b => b.date === d && b.status === 'PENDING');
+
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setSelectedDate(d)}
+                  style={{
+                    flexShrink: 0,
+                    width: 54, padding: '8px 4px',
+                    borderRadius: 10,
+                    border: isSelected
+                      ? '1.5px solid var(--primary)'
+                      : '1px solid rgba(255,255,255,0.1)',
+                    background: isSelected
+                      ? 'rgba(0,173,181,0.2)'
+                      : isToday(d)
+                        ? 'rgba(255,255,255,0.06)'
+                        : 'rgba(255,255,255,0.02)',
+                    color: isSelected ? 'var(--primary)' : 'var(--text)',
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 3,
+                  }}
+                >
+                  <span style={{ fontSize: '0.62rem', color: isSelected ? 'var(--primary)' : 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    {dayLabel}
+                  </span>
+                  <span style={{ fontSize: '1rem', fontWeight: isSelected ? 700 : 500 }}>
+                    {dayNum}
+                  </span>
+                  {count > 0 && (
+                    <span style={{
+                      fontSize: '0.6rem', fontWeight: 700,
+                      background: hasPending ? '#FBBF24' : '#34D399',
+                      color: '#000', borderRadius: 10,
+                      padding: '1px 5px', lineHeight: 1.4,
+                    }}>
+                      {count}
+                    </span>
+                  )}
+                  {isToday(d) && (
+                    <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--primary)', display: 'block' }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Date range inputs ── */}
+        {!useDateStrip && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="date"
+              className="form-input"
+              style={{ width: 'auto' }}
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              title="From date"
+            />
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>to</span>
+            <input
+              type="date"
+              className="form-input"
+              style={{ width: 'auto' }}
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              title="To date"
+            />
+            {(dateFrom || dateTo) && (
+              <button className="btn-sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>
+                ✕ Clear
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ── APPROVAL PANEL VIEW ───────────────────────────────── */}
       {view === 'panel' && (
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 4 }}>
           <BookingApprovalPanel
             pendingBookings={pendingBookings}
             onApprove={handleApprove}
@@ -160,8 +349,8 @@ export default function ManageBookings() {
       {/* ── TABLE VIEW ────────────────────────────────────────── */}
       {view === 'table' && (
         <>
-          {/* Filter bar — same as Resources page */}
-          <div className="filter-bar glass-card" style={{ marginTop: 12 }}>
+          {/* Search + status tabs */}
+          <div className="filter-bar glass-card" style={{ marginBottom: 12 }}>
             <div className="filter-search">
               <span className="form-input-icon">🔍</span>
               <input
@@ -172,7 +361,6 @@ export default function ManageBookings() {
                 className="form-input"
               />
             </div>
-
             <div className="filter-chips">
               {STATUS_FILTERS.map(s => (
                 <button
@@ -181,48 +369,38 @@ export default function ManageBookings() {
                   onClick={() => setFilter(s)}
                 >
                   {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+                  {s !== 'ALL' && counts[s] > 0 && (
+                    <span style={{
+                      marginLeft: 5, fontSize: '0.65rem', fontWeight: 700,
+                      background: STATUS_COLORS[s], color: '#000',
+                      borderRadius: 10, padding: '1px 5px',
+                    }}>
+                      {counts[s]}
+                    </span>
+                  )}
                 </button>
               ))}
-            </div>
-
-            {/* Date range filter */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="date"
-                className="form-input"
-                style={{ width: 'auto' }}
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                title="From date"
-              />
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>to</span>
-              <input
-                type="date"
-                className="form-input"
-                style={{ width: 'auto' }}
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                title="To date"
-              />
-              {(dateFrom || dateTo) && (
-                <button className="btn-sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>
-                  ✕ Clear
-                </button>
-              )}
             </div>
           </div>
 
           {loading ? (
-            <div className="glass-card" style={{ padding: 20, color: 'var(--text-muted)', marginTop: 12 }}>
+            <div className="glass-card" style={{ padding: 20, color: 'var(--text-muted)' }}>
               Loading bookings...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="glass-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', marginTop: 12 }}>
+            <div className="glass-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
               <p style={{ fontSize: '2.5rem', marginBottom: 10 }}>📅</p>
-              <p>No bookings found for the selected filters.</p>
+              <p style={{ fontWeight: 600 }}>
+                No bookings for {useDateStrip ? fmtDate(selectedDate) : 'selected range'}.
+              </p>
+              {filter !== 'ALL' && (
+                <p style={{ fontSize: '0.85rem', marginTop: 4 }}>
+                  Try switching to <strong>All</strong>.
+                </p>
+              )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {filtered.map(b => (
                 <AdminBookingRow
                   key={b.id}
@@ -257,10 +435,19 @@ function AdminBookingRow({ booking: b, onApprove, onReject, onCancel, onDetail }
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="glass-card" style={{
-      padding: '14px 18px',
-      borderLeft: `3px solid ${statusColor(b.status)}`,
-    }}>
+    <div
+      className="glass-card"
+      style={{
+        padding: '14px 18px',
+        borderLeft: `3px solid ${STATUS_COLORS[b.status] || 'var(--border)'}`,
+        cursor: 'pointer',
+        transition: 'background 0.15s',
+      }}
+      onClick={() => {
+        // Click anywhere on card to expand (except action buttons)
+        if (b.status === 'PENDING') setExpanded(e => !e);
+      }}
+    >
       {/* Top row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
 
@@ -303,42 +490,42 @@ function AdminBookingRow({ booking: b, onApprove, onReject, onCancel, onDetail }
           )}
         </div>
 
-        {/* Right actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn-sm" onClick={onDetail} title="View details">🔍</button>
-            {b.status === 'PENDING' && (
-              <button
-                className="btn-sm"
-                style={{ fontSize: '0.75rem' }}
-                onClick={() => setExpanded(e => !e)}
-              >
-                {expanded ? '▲ Hide' : '▼ Actions'}
-              </button>
-            )}
-            {b.status === 'APPROVED' && (
-              <button className="btn-sm btn-sm--danger" onClick={() => onCancel(b.id)}>
-                Cancel
-              </button>
-            )}
-          </div>
+        {/* Right — detail button + expand indicator */}
+        <div
+          style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}
+          onClick={e => e.stopPropagation()} // prevent card click
+        >
+          <button className="btn-sm" onClick={onDetail} title="View details">🔍</button>
+          {b.status === 'APPROVED' && (
+            <button className="btn-sm btn-sm--danger" onClick={() => onCancel(b.id)}>
+              Cancel
+            </button>
+          )}
+          {b.status === 'PENDING' && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {expanded ? '▲' : '▼'}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* ── Expandable approve/reject panel ── */}
+      {/* Expandable approve/reject panel */}
       {expanded && b.status === 'PENDING' && (
-        <div style={{
-          marginTop: 12,
-          paddingTop: 12,
-          borderTop: '1px solid var(--border)',
-          display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap',
-        }}>
+        <div
+          style={{
+            marginTop: 12, paddingTop: 12,
+            borderTop: '1px solid var(--border)',
+            display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap',
+          }}
+          onClick={e => e.stopPropagation()} // prevent card click inside panel
+        >
           <input
             className="form-input"
             style={{ flex: 1, minWidth: 180, fontSize: '0.82rem', padding: '6px 10px' }}
             placeholder="Admin notes (required for rejection)"
             value={notes}
             onChange={e => setNotes(e.target.value)}
+            autoFocus
           />
           <button
             className="btn-sm btn-sm--success"
@@ -356,6 +543,12 @@ function AdminBookingRow({ booking: b, onApprove, onReject, onCancel, onDetail }
           >
             ✕ Reject
           </button>
+          <button
+            className="btn-sm"
+            onClick={() => { setExpanded(false); setNotes(''); }}
+          >
+            Cancel
+          </button>
         </div>
       )}
     </div>
@@ -365,19 +558,19 @@ function AdminBookingRow({ booking: b, onApprove, onReject, onCancel, onDetail }
 /* ── Detail Modal Content ─────────────────────────────────────── */
 function BookingDetailView({ booking: b }) {
   const rows = [
-    { label: 'Booking ID',  value: b.id },
-    { label: 'Facility',    value: b.facilityName || b.resourceName || b.facilityId },
-    { label: 'Requested by',value: `${b.userName} (${b.userEmail || 'N/A'})` },
-    { label: 'Date',        value: b.date },
-    { label: 'Time',        value: `${b.startTime} – ${b.endTime}` },
-    { label: 'Attendees',   value: b.expectedAttendees },
-    { label: 'Capacity',    value: b.facilityCapacity || 'N/A' },
-    { label: 'Min required',value: b.minimumAttendeesRequired || 'N/A' },
-    { label: 'Type',        value: b.bookingType || 'BOOKING' },
-    { label: 'Purpose',     value: b.purpose },
-    { label: 'Status',      value: <StatusBadge status={b.status} /> },
-    { label: 'Admin notes', value: b.adminNotes || '—' },
-    { label: 'Created',     value: b.createdAt ? new Date(b.createdAt).toLocaleString() : '—' },
+    { label: 'Booking ID',   value: b.id },
+    { label: 'Facility',     value: b.facilityName || b.resourceName || b.facilityId },
+    { label: 'Requested by', value: `${b.userName} (${b.userEmail || 'N/A'})` },
+    { label: 'Date',         value: b.date },
+    { label: 'Time',         value: `${b.startTime} – ${b.endTime}` },
+    { label: 'Attendees',    value: b.expectedAttendees },
+    { label: 'Capacity',     value: b.facilityCapacity || 'N/A' },
+    { label: 'Min required', value: b.minimumAttendeesRequired || 'N/A' },
+    { label: 'Type',         value: b.bookingType || 'BOOKING' },
+    { label: 'Purpose',      value: b.purpose },
+    { label: 'Status',       value: <StatusBadge status={b.status} /> },
+    { label: 'Admin notes',  value: b.adminNotes || '—' },
+    { label: 'Created',      value: b.createdAt ? new Date(b.createdAt).toLocaleString() : '—' },
   ];
 
   return (
@@ -385,10 +578,8 @@ function BookingDetailView({ booking: b }) {
       {rows.map(({ label, value }) => (
         <div key={label} style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '9px 0',
-          borderBottom: '1px solid var(--border)',
-          fontSize: '0.85rem',
-          gap: 12,
+          padding: '9px 0', borderBottom: '1px solid var(--border)',
+          fontSize: '0.85rem', gap: 12,
         }}>
           <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{label}</span>
           <span style={{ color: 'var(--text)', textAlign: 'right', wordBreak: 'break-all' }}>{value}</span>
@@ -396,14 +587,4 @@ function BookingDetailView({ booking: b }) {
       ))}
     </div>
   );
-}
-
-function statusColor(status) {
-  const map = {
-    PENDING:   '#FBBF24',
-    APPROVED:  '#34D399',
-    REJECTED:  '#F87171',
-    CANCELLED: '#6B7280',
-  };
-  return map[status] || 'var(--border)';
 }

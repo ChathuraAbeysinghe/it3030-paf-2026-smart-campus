@@ -1,51 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
+/**
+ * AvailabilityChecker.jsx
+ * 14-day strip for quick date selection + availability info.
+ * No full month calendar. No separate date input.
+ */
+import { useMemo } from 'react';
 import StatusBadge from './StatusBadge';
 
-function toMinutes(timeValue) {
-  if (!timeValue) return 0;
-  var parts = String(timeValue).split(':');
-  return Number(parts[0] || 0) * 60 + Number(parts[1] || 0);
+function toMinutes(t) {
+  if (!t) return 0;
+  const [h, m] = String(t).split(':').map(Number);
+  return h * 60 + (m || 0);
 }
-
-function hasOverlap(startA, endA, startB, endB) {
-  return toMinutes(startA) < toMinutes(endB) && toMinutes(endA) > toMinutes(startB);
+function overlaps(sA, eA, sB, eB) {
+  return toMinutes(sA) < toMinutes(eB) && toMinutes(eA) > toMinutes(sB);
 }
-
-function toDateValue(dateObj) {
-  var year = dateObj.getFullYear();
-  var month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  var day = String(dateObj.getDate()).padStart(2, '0');
-  return year + '-' + month + '-' + day;
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
-
-function parseDateValue(dateValue) {
-  if (!dateValue) return null;
-  var parsed = new Date(dateValue + 'T00:00:00');
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function getCalendarCells(baseMonthDate) {
-  var year = baseMonthDate.getFullYear();
-  var month = baseMonthDate.getMonth();
-  var firstDayIndex = new Date(year, month, 1).getDay();
-  var daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  var cells = [];
-  for (var i = 0; i < firstDayIndex; i += 1) {
-    cells.push(null);
+function nextDays(n = 14) {
+  const days = [];
+  for (let i = 0; i < n; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    days.push(d.toISOString().split('T')[0]);
   }
-  for (var day = 1; day <= daysInMonth; day += 1) {
-    cells.push(new Date(year, month, day));
-  }
-  while (cells.length % 7 !== 0) {
-    cells.push(null);
-  }
-
-  return cells;
-}
-
-function getMonthTitle(baseMonthDate) {
-  return baseMonthDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  return days;
 }
 
 export default function AvailabilityChecker({
@@ -56,170 +37,239 @@ export default function AvailabilityChecker({
   selectedDate,
   onDateSelect,
 }) {
-  var safeConflicts = Array.isArray(conflicts) ? conflicts : [];
-  var [calendarMonth, setCalendarMonth] = useState(function () {
-    var fromSelected = parseDateValue(selectedDate);
-    return fromSelected || new Date();
-  });
+  const safe = Array.isArray(conflicts) ? conflicts : [];
+  const slots    = safe.filter(b => b.id !== excludeBookingId);
+  const approved = slots.filter(b => b.status === 'APPROVED');
+  const pending  = slots.filter(b => b.status === 'PENDING');
+  const overlapping = slots.filter(b =>
+    startTime && endTime && overlaps(startTime, endTime, b.startTime, b.endTime)
+  );
+  const hasConflict = overlapping.length > 0;
 
-  useEffect(function () {
-    var parsed = parseDateValue(selectedDate);
-    if (!parsed) return;
-    setCalendarMonth(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
-  }, [selectedDate]);
-
-  var calendarCells = useMemo(function () {
-    return getCalendarCells(calendarMonth);
-  }, [calendarMonth]);
-
-  function goToPreviousMonth() {
-    setCalendarMonth(function (prev) {
-      return new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
-    });
-  }
-
-  function goToNextMonth() {
-    setCalendarMonth(function (prev) {
-      return new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
-    });
-  }
-
-  var bookedSlots = safeConflicts.filter(function (b) {
-    return b.id !== excludeBookingId;
-  });
-
-  var overlapping = bookedSlots.filter(function (b) {
-    if (!startTime || !endTime) return false;
-    return hasOverlap(startTime, endTime, b.startTime, b.endTime);
-  });
-
-  var hasBookingsOnSelectedDate = bookedSlots.length > 0;
-
-  var selectedDateLabel = selectedDate
-    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString()
-    : 'No date selected';
+  const strip = useMemo(() => nextDays(14), []);
+  const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="glass-card" style={{ padding: 16 }}>
-      <h3 style={{ marginBottom: 10 }}>Availability Checker</h3>
+    <div className="glass-card" style={{ padding: '14px 16px', display: 'grid', gap: 12 }}>
 
-      <div className="glass-card" style={{ padding: 12, marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <button type="button" className="btn-sm" onClick={goToPreviousMonth}>Prev</button>
-          <strong>{getMonthTitle(calendarMonth)}</strong>
-          <button type="button" className="btn-sm" onClick={goToNextMonth}>Next</button>
-        </div>
+      {/* ── Title ─────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)' }}>
+          📅 Select Date
+        </span>
+        {selectedDate && (
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            {fmtDate(selectedDate)}
+          </span>
+        )}
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6 }}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(function (dayLabel) {
-            return (
-              <div key={dayLabel} style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+      {/* ── 14-day strip ──────────────────────────────────────── */}
+      <div style={{
+        display: 'flex', gap: 6,
+        overflowX: 'auto', paddingBottom: 4,
+        scrollbarWidth: 'thin',
+      }}>
+        {strip.map(d => {
+          const day        = new Date(d + 'T00:00:00');
+          const dayLabel   = day.toLocaleDateString('en-US', { weekday: 'short' });
+          const dateNum    = day.getDate();
+          const isSelected = d === selectedDate;
+          const isToday    = d === today;
+
+          return (
+            <button
+              key={d}
+              type="button"
+              onClick={() => onDateSelect && onDateSelect(d)}
+              style={{
+                flexShrink: 0,
+                width: 48, padding: '7px 4px',
+                borderRadius: 10,
+                border: isSelected
+                  ? '1.5px solid var(--primary)'
+                  : '1px solid rgba(255,255,255,0.1)',
+                background: isSelected
+                  ? 'rgba(0,173,181,0.2)'
+                  : isToday
+                    ? 'rgba(255,255,255,0.06)'
+                    : 'rgba(255,255,255,0.02)',
+                color: isSelected ? 'var(--primary)' : 'var(--text)',
+                cursor: 'pointer',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 2,
+              }}
+            >
+              <span style={{
+                fontSize: '0.62rem',
+                color: isSelected ? 'var(--primary)' : 'var(--text-muted)',
+                textTransform: 'uppercase', letterSpacing: '0.3px',
+              }}>
                 {dayLabel}
-              </div>
-            );
-          })}
+              </span>
+              <span style={{
+                fontSize: '0.95rem',
+                fontWeight: isSelected ? 700 : 500,
+              }}>
+                {dateNum}
+              </span>
+              {isToday && (
+                <span style={{
+                  width: 4, height: 4, borderRadius: '50%',
+                  background: 'var(--primary)', display: 'block',
+                }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-          {calendarCells.map(function (dateObj, index) {
-            if (!dateObj) {
-              return <div key={'blank-' + index} />;
-            }
-
-            var dateValue = toDateValue(dateObj);
-            var isSelected = selectedDate === dateValue;
-
-            return (
-              <button
-                key={dateValue}
-                type="button"
-                onClick={function () {
-                  if (onDateSelect) onDateSelect(dateValue);
-                }}
-                style={{
-                  borderRadius: 8,
-                  padding: '6px 0',
-                  border: isSelected ? '1px solid rgba(0,173,181,0.75)' : '1px solid rgba(255,255,255,0.12)',
-                  background: isSelected ? 'rgba(0,173,181,0.22)' : 'rgba(255,255,255,0.03)',
-                  color: isSelected ? '#00ADB5' : 'var(--text)',
-                  cursor: 'pointer',
-                  fontWeight: isSelected ? 700 : 500,
-                }}
-              >
-                {dateObj.getDate()}
-              </button>
-            );
-          })}
-        </div>
-
-        <p style={{ marginTop: 10, marginBottom: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          Selected Date: {selectedDateLabel}
+      {/* ── Results ───────────────────────────────────────────── */}
+      {!selectedDate ? (
+        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          Select a date above to check availability.
         </p>
-
-        {selectedDate ? (
-          hasBookingsOnSelectedDate ? (
-            <div style={{ marginTop: 8, color: '#FBBF24', fontSize: '0.82rem' }}>
-              Booking(s) found for selected date.
+      ) : (
+        <>
+          {/* Count chips */}
+          {slots.length === 0 ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              fontSize: '0.83rem', color: '#34D399',
+              background: 'rgba(52,211,153,0.08)',
+              border: '1px solid rgba(52,211,153,0.25)',
+              borderRadius: 8, padding: '8px 12px',
+            }}>
+              ✅ No existing bookings — this date is fully available.
             </div>
           ) : (
-            <div style={{ marginTop: 8, color: '#34D399', fontSize: '0.82rem' }}>
-              No bookings found for selected date.
-            </div>
-          )
-        ) : (
-          <div style={{ marginTop: 8, color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-            Select a date to check booking availability and time periods.
-          </div>
-        )}
-      </div>
-
-      {!startTime || !endTime ? (
-        <p style={{ color: 'var(--text-muted)', marginBottom: 8 }}>
-          Pick a start and end time to validate overlap.
-        </p>
-      ) : overlapping.length > 0 ? (
-        <div style={{ color: '#F87171', marginBottom: 10 }}>
-          Selected time range overlaps with {overlapping.length} existing booking(s).
-        </div>
-      ) : (
-        <div style={{ color: '#34D399', marginBottom: 10 }}>
-          Selected time range is available.
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gap: 8 }}>
-        {bookedSlots.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>No existing bookings for this date.</p>
-        ) : (
-          <>
-            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Booked Time Periods:
-            </p>
-            {bookedSlots.map(function (booking) {
-              return (
-                <div
-                  key={booking.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 10,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: 10,
-                    padding: '8px 10px',
-                  }}
-                >
-                  <div style={{ display: 'grid', gap: 2 }}>
-                    <strong style={{ fontSize: '0.9rem' }}>{booking.startTime} - {booking.endTime}</strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {booking.userName || 'Unknown User'}
-                    </span>
-                  </div>
-                  <StatusBadge status={booking.status} />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {approved.length > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(52,211,153,0.1)',
+                  border: '1px solid rgba(52,211,153,0.3)',
+                  borderRadius: 8, padding: '6px 12px', fontSize: '0.82rem',
+                }}>
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#34D399' }}>
+                    {approved.length}
+                  </span>
+                  <span style={{ color: '#34D399' }}>
+                    Approved booking{approved.length > 1 ? 's' : ''}
+                  </span>
                 </div>
-              );
-            })}
-          </>
+              )}
+              {pending.length > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(251,191,36,0.1)',
+                  border: '1px solid rgba(251,191,36,0.3)',
+                  borderRadius: 8, padding: '6px 12px', fontSize: '0.82rem',
+                }}>
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#FBBF24' }}>
+                    {pending.length}
+                  </span>
+                  <span style={{ color: '#FBBF24' }}>
+                    Pending booking{pending.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Time conflict status */}
+          {!startTime || !endTime ? (
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Enter start and end time to check for conflicts.
+            </p>
+          ) : hasConflict ? (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              fontSize: '0.83rem', color: '#F87171',
+              background: 'rgba(248,113,113,0.08)',
+              border: '1px solid rgba(248,113,113,0.3)',
+              borderRadius: 8, padding: '8px 12px',
+            }}>
+              <span>⚠️</span>
+              <span>
+                <strong>{startTime}–{endTime}</strong> overlaps with{' '}
+                {overlapping.length} existing booking{overlapping.length > 1 ? 's' : ''}.
+                Please choose a different time.
+              </span>
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              fontSize: '0.83rem', color: '#34D399',
+              background: 'rgba(52,211,153,0.07)',
+              border: '1px solid rgba(52,211,153,0.25)',
+              borderRadius: 8, padding: '8px 12px',
+            }}>
+              ✅ <strong>{startTime}–{endTime}</strong> is available — no conflicts.
+            </div>
+          )}
+
+          {/* Booked slots list */}
+          {slots.length > 0 && (
+            <div style={{ display: 'grid', gap: 6 }}>
+              <p style={{
+                margin: 0, fontSize: '0.74rem', fontWeight: 600,
+                color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.4px',
+              }}>
+                Booked Time Slots
+              </p>
+              {approved.map(b => (
+                <SlotRow key={b.id} booking={b} isConflict={overlapping.some(o => o.id === b.id)} />
+              ))}
+              {pending.length > 0 && (
+                <>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Pending — may conflict if approved later
+                  </p>
+                  {pending.map(b => (
+                    <SlotRow key={b.id} booking={b} isConflict={overlapping.some(o => o.id === b.id)} />
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function SlotRow({ booking: b, isConflict }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      gap: 10, padding: '7px 12px', borderRadius: 8,
+      border: isConflict ? '1px solid rgba(248,113,113,0.4)' : '1px solid rgba(255,255,255,0.07)',
+      background: isConflict ? 'rgba(248,113,113,0.06)' : 'rgba(255,255,255,0.03)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+        <span style={{
+          fontFamily: 'var(--font-mono, monospace)',
+          fontSize: '0.82rem', fontWeight: 600, flexShrink: 0,
+          color: isConflict ? '#F87171' : 'var(--text)',
+          background: isConflict ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.06)',
+          padding: '2px 8px', borderRadius: 6,
+        }}>
+          {b.startTime} – {b.endTime}
+        </span>
+        <span style={{
+          fontSize: '0.78rem', color: 'var(--text-muted)',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {b.userName || 'Unknown'}
+        </span>
+        {isConflict && (
+          <span style={{ fontSize: '0.68rem', color: '#F87171', fontWeight: 700, flexShrink: 0 }}>
+            ⚠ CONFLICT
+          </span>
         )}
       </div>
+      <StatusBadge status={b.status} />
     </div>
   );
 }
