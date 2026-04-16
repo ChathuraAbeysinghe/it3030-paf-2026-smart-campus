@@ -122,6 +122,15 @@ public class AuthController {
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute("manualUserId", user.getId());
 
+        // Authenticate in Spring Security Context 
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken auth = 
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                user.getEmail(), null, java.util.Collections.emptyList()
+            );
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+        session.setAttribute(org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
+            org.springframework.security.core.context.SecurityContextHolder.getContext());
+
         return ResponseEntity.ok(Map.of(
                 "id",      user.getId(),
                 "name",    user.getName(),

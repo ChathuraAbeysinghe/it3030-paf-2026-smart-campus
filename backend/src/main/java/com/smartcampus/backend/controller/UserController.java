@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,6 +59,30 @@ public class UserController {
         }
 
         return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+    }
+
+    /**
+     * GET /api/user/technicians
+     * Returns a list of users with TECHNICIAN role for assigning tickets.
+     */
+    @GetMapping("/technicians")
+    public ResponseEntity<?> getTechnicians() {
+        // Technically should filter by Role.TECHNICIAN but for now we might want both ADMIN and TECHNICIAN to be assignable? 
+        // Let's just return TECHNICIAN.
+        List<User> technicians = userRepository.findAll().stream()
+                .filter(u -> u.getRole() == com.smartcampus.backend.model.Role.TECHNICIAN || u.getRole() == com.smartcampus.backend.model.Role.ADMIN)
+                .toList();
+
+        List<Map<String, Object>> response = technicians.stream().<Map<String, Object>>map(u -> Map.of(
+                "id", u.getId(),
+                "name", u.getName(),
+                "email", u.getEmail(),
+                "role", u.getRole().name(),
+                "active", true,
+                "assignedTickets", 0 // Mocked assigned logic for now
+        )).toList();
+
+        return ResponseEntity.ok(response);
     }
 
     private Map<String, String> buildUserResponse(User user) {
