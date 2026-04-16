@@ -9,6 +9,7 @@ const AUTH_ROUTES = [
   '/resources',
   '/my-bookings',
   '/my-tickets',
+  '/tickets',
   '/profile',
   '/admin',
   '/technician',
@@ -19,16 +20,28 @@ export default function Navbar() {
   const location = useLocation();
 
   const isAuthenticated = Boolean(user);
-  const useAuthNav = useMemo(() => {
-    if (!isAuthenticated) return false;
+  
+  // Check if current path is an authenticated route
+  const isAuthRoute = useMemo(() => {
     return AUTH_ROUTES.some((route) =>
       location.pathname === route || location.pathname.startsWith(`${route}/`)
     );
-  }, [isAuthenticated, location.pathname]);
+  }, [location.pathname]);
 
-  if (loading) return null;
+  // Use AuthNav if user is authenticated OR if we're on an auth route (to prevent flashing GuestNav)
+  const useAuthNav = useMemo(() => {
+    if (isAuthenticated) return true;
+    // If we're on an auth route but not authenticated yet, still show AuthNav skeleton
+    // This prevents the GuestNav flash while auth is loading
+    if (isAuthRoute && loading) return true;
+    return false;
+  }, [isAuthenticated, isAuthRoute, loading]);
 
-  return useAuthNav
-    ? <AuthNav user={user} currentPath={location.pathname} onLogout={logout} />
-    : <GuestNav currentPath={location.pathname} />;
+  if (loading && !isAuthRoute) return null;
+
+  return useAuthNav ? (
+    <AuthNav user={user} currentPath={location.pathname} onLogout={logout} />
+  ) : (
+    <GuestNav currentPath={location.pathname} />
+  );
 }
