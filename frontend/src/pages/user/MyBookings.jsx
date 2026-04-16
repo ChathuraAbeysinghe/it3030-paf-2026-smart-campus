@@ -386,10 +386,10 @@ function BookingCard({ booking: b, onEdit, onCancel, onQR }) {
 
 function statusColor(status) {
   const map = {
-    PENDING:   '#FBBF24',
-    APPROVED:  '#34D399',
-    REJECTED:  '#F87171',
-    CANCELLED: '#6B7280',
+    PENDING: '#F5A623',
+    APPROVED: '#2DBD87',
+    REJECTED: '#EF4444',
+    CANCELLED: '#EF4444',
   };
   return map[status] || 'var(--border)';
 }

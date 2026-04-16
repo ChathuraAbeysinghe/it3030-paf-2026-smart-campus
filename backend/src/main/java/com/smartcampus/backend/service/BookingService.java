@@ -32,7 +32,7 @@ public class BookingService {
     private static final Set<BookingStatus> BLOCKING_STATUSES =
             Set.of(BookingStatus.PENDING, BookingStatus.APPROVED);
 
-    private static final double MIN_OCCUPANCY_RATIO = 0.60;
+    private static final double MIN_OCCUPANCY_RATIO = 0.6;
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
@@ -51,7 +51,7 @@ public class BookingService {
         }
 
         Set<String> facilityIds = bookings.stream().map(Booking::getFacilityId).collect(Collectors.toSet());
-        Set<String> userIds     = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
+        Set<String> userIds = bookings.stream().map(Booking::getUserId).collect(Collectors.toSet());
 
         Map<String, Resource> facilityMap = resourceRepository.findAllById(facilityIds)
                 .stream().collect(Collectors.toMap(Resource::getId, r -> r));
@@ -68,17 +68,20 @@ public class BookingService {
     }
 
     public BookingResponse create(User actor, BookingRequest request) {
-        validateTimes(request);
+        validateRequest(request);
         Resource facility = getFacilityOrThrow(request.getFacilityId());
         validateCapacity(request.getAttendees(), facility);
         BookingType bookingType = resolveBookingType(request.getAttendees(), facility.getCapacity());
 
         List<Booking> conflicts = findConflicts(
-                request.getFacilityId(), 
+                request.getFacilityId(),
                 request.getDate(),
-                request.getStartTime(), 
+                request.getStartTime(),
                 request.getEndTime(),
-                null, BLOCKING_STATUSES);
+                null,
+                BLOCKING_STATUSES
+        );
+
         if (!conflicts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Requested time slot conflicts with an existing booking");
@@ -103,20 +106,24 @@ public class BookingService {
     }
 
     public BookingResponse update(User actor, String id, BookingRequest request) {
-        validateTimes(request);
+        validateRequest(request);
         Booking existing = getByIdOrThrow(id);
         ensureOwnerOrAdmin(actor, existing);
         ensurePending(existing);
+
         Resource facility = getFacilityOrThrow(request.getFacilityId());
         validateCapacity(request.getAttendees(), facility);
         BookingType bookingType = resolveBookingType(request.getAttendees(), facility.getCapacity());
 
         List<Booking> conflicts = findConflicts(
-                request.getFacilityId(), 
+                request.getFacilityId(),
                 request.getDate(),
-                request.getStartTime(), 
+                request.getStartTime(),
                 request.getEndTime(),
-                existing.getId(), BLOCKING_STATUSES);
+                existing.getId(),
+                BLOCKING_STATUSES
+        );
+
         if (!conflicts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Requested time slot conflicts with an existing booking");
@@ -140,12 +147,14 @@ public class BookingService {
         ensurePending(booking);
 
         List<Booking> approvedConflicts = findConflicts(
-                booking.getFacilityId(), 
+                booking.getFacilityId(),
                 booking.getDate(),
-                booking.getStartTime(), 
+                booking.getStartTime(),
                 booking.getEndTime(),
-                booking.getId(), 
-                Set.of(BookingStatus.APPROVED));
+                booking.getId(),
+                Set.of(BookingStatus.APPROVED)
+        );
+
         if (!approvedConflicts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Cannot approve due to existing approved booking conflict");
@@ -185,6 +194,7 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Booking is already " + booking.getStatus().name().toLowerCase());
         }
+
         if (booking.getStatus() == BookingStatus.APPROVED) {
             ensureAdmin(actor);
         }
@@ -204,7 +214,10 @@ public class BookingService {
         }
 
         List<Booking> bookings = bookingRepository.findByFacilityIdAndDateAndStatusIn(
-                facilityId.trim(), date, BLOCKING_STATUSES);
+                facilityId.trim(),
+                date,
+                BLOCKING_STATUSES
+        );
 
         return bookings.stream()
                 .sorted(Comparator.comparing(Booking::getStartTime))
@@ -212,16 +225,14 @@ public class BookingService {
                 .toList();
     }
 
-    // Hard block: attendees cannot exceed resource capacity
     private void validateCapacity(int attendees, Resource facility) {
         if (facility.getCapacity() != null && attendees > facility.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Attendees (" + attendees + ") exceed the capacity of "
-                    + facility.getName() + " (" + facility.getCapacity() + ")");
+                            + facility.getName() + " (" + facility.getCapacity() + ")");
         }
     }
 
-    // BOOKING = attendees >= 60%, REQUEST = below 60%
     private BookingType resolveBookingType(int attendees, Integer capacity) {
         if (capacity == null || capacity == 0) return BookingType.BOOKING;
         int minRequired = (int) Math.ceil(capacity * MIN_OCCUPANCY_RATIO);
@@ -240,6 +251,10 @@ public class BookingService {
         }
     }
 
+    private void validateRequest(BookingRequest request) {
+        validateTimes(request);
+    }
+
     private Booking getByIdOrThrow(String id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
@@ -253,11 +268,17 @@ public class BookingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Facility not found"));
     }
 
-    private List<Booking> findConflicts(String facilityId, LocalDate date,
-            LocalTime start, LocalTime end, String excludeBookingId, Set<BookingStatus> statuses) {
+    private List<Booking> findConflicts(
+            String facilityId,
+            LocalDate date,
+            LocalTime start,
+            LocalTime end,
+            String excludeBookingId,
+            Set<BookingStatus> statuses
+    ) {
         return bookingRepository.findByFacilityIdAndDateAndStatusIn(facilityId.trim(), date, statuses).stream()
-                .filter(e -> excludeBookingId == null || !excludeBookingId.equals(e.getId()))
-                .filter(e -> overlaps(start, end, e.getStartTime(), e.getEndTime()))
+                .filter(existing -> excludeBookingId == null || !excludeBookingId.equals(existing.getId()))
+                .filter(existing -> overlaps(start, end, existing.getStartTime(), existing.getEndTime()))
                 .toList();
     }
 
@@ -292,13 +313,14 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    // Batch version — used by getBookings()
-    private BookingResponse toResponse(Booking booking,
-                                        Map<String, Resource> facilityMap,
-                                        Map<String, String> userNames) {
-        Resource facility   = facilityMap.get(booking.getFacilityId());
+    private BookingResponse toResponse(
+            Booking booking,
+            Map<String, Resource> facilityMap,
+            Map<String, String> userNames
+    ) {
+        Resource facility = facilityMap.get(booking.getFacilityId());
         String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
-        Integer capacity    = facility != null ? facility.getCapacity() : null;
+        Integer capacity = facility != null ? facility.getCapacity() : null;
 
         return BookingResponse.builder()
                 .id(booking.getId())
@@ -322,12 +344,11 @@ public class BookingService {
                 .build();
     }
 
-    // Single version — used by create/update/approve/reject/cancel
     private BookingResponse toResponse(Booking booking) {
-        Resource facility   = resourceRepository.findById(booking.getFacilityId()).orElse(null);
+        Resource facility = resourceRepository.findById(booking.getFacilityId()).orElse(null);
         String facilityName = facility != null ? facility.getName() : booking.getFacilityId();
-        Integer capacity    = facility != null ? facility.getCapacity() : null;
-        String userName     = userRepository.findById(booking.getUserId())
+        Integer capacity = facility != null ? facility.getCapacity() : null;
+        String userName = userRepository.findById(booking.getUserId())
                 .map(User::getName).orElse(booking.getUserId());
 
         return BookingResponse.builder()

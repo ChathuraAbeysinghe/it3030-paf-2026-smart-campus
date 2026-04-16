@@ -23,6 +23,7 @@ com\smartcampus\backend\controller\UserController.class
 com\smartcampus\backend\repository\BookingRepository.class
 com\smartcampus\backend\config\ResourceMongoConvertersConfig$ResourceTypeToStringConverter.class
 com\smartcampus\backend\repository\ResourceRepository.class
+com\smartcampus\backend\model\BookingType.class
 com\smartcampus\backend\config\ResourceMongoConvertersConfig$StringToResourceTypeConverter.class
 com\smartcampus\backend\controller\BookingController.class
 com\smartcampus\backend\dto\BookingRequest.class
