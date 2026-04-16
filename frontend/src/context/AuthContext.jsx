@@ -11,6 +11,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// ── Interceptor for Unauthorized access ──
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('smartcampus_user');
+      window.dispatchEvent(new Event('auth-logout'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ── Mock Staff Credentials (Admin & Technician bypass) ────────────────────
 // These work even when the backend is not set up for these roles.
 // Passwords are stored in localStorage so users can change them.
@@ -35,17 +47,25 @@ function checkStaffCredential(email, password) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
+  // Initialize user from localStorage synchronously to prevent flash
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('smartcampus_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   // Attempt to restore session on mount
   useEffect(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem('smartcampus_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    const handleLogout = () => setUser(null);
+    window.addEventListener('auth-logout', handleLogout);
+    
     fetchUser();
+    
+    return () => window.removeEventListener('auth-logout', handleLogout);
   }, []);
 
   const fetchUser = async () => {

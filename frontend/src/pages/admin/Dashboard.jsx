@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { bookingService, ticketService, resourceService } from '../../services/api';
+import { bookingService, resourceService } from '../../services/api';
+import { ticketService } from '../../services/ticketService';
 import { userService } from '../../services/api';
 import StatCard from '../../components/StatCard';
 
