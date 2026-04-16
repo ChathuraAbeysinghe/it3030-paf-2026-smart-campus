@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { resourceService } from "../../services/api";
 import { formatResourceType, getResourceVisual } from "../../components/resource/resourceVisuals";
+import ResourceDetailsModal from "../../components/resource/ResourceDetailsModal";
 import "../../components/resource/resource-management.css";
 
 var RESOURCE_TYPES = [
@@ -34,6 +35,10 @@ export default function Resources() {
   var stateError = useState("");
   var error = stateError[0];
   var setError = stateError[1];
+
+  var stateSelectedResource = useState(null);
+  var selectedResource = stateSelectedResource[0];
+  var setSelectedResource = stateSelectedResource[1];
 
   useEffect(function () {
     loadResources();
@@ -113,8 +118,9 @@ export default function Resources() {
               <div
                 className="glass-card rm-resource-card"
                 key={resource.id}
+                onClick={function () { setSelectedResource(resource); }}
                 style={{
-                  cursor: "default"
+                  cursor: "pointer"
                 }}
               >
                 <div className="rm-resource-image-wrap">
@@ -138,12 +144,21 @@ export default function Resources() {
                   <div className="rm-resource-meta" style={{ marginTop: -6, marginBottom: 4 }}>
                     <span>Available Hours: {hoursText}</span>
                   </div>
+
+                  <div className="rm-resource-meta" style={{ marginTop: -6, marginBottom: 0 }}>
+                    <span>Hall ID: {resource.hallId || resource.location || "-"}</span>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <ResourceDetailsModal
+        resource={selectedResource}
+        onClose={function () { setSelectedResource(null); }}
+      />
     </div>
   );
 }

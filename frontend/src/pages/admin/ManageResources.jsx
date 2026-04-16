@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { resourceService } from "../../services/api";
+import StatCard from "../../components/StatCard";
 import GlassTable from "../../components/GlassTable";
 import { formatResourceType, getResourceVisual } from "../../components/resource/resourceVisuals";
+import {
+  BUILDING_OPTIONS,
+  BLOCK_OPTIONS_BY_BUILDING,
+  FACILITY_OPTIONS,
+  formatFacilityName,
+  generateHallId
+} from "../../components/resource/resourceFormMeta";
 import "../../components/resource/resource-management.css";
 
 var RESOURCE_TYPES = [
@@ -24,6 +32,11 @@ var EMPTY_FORM = {
   description: "",
   availableFrom: "08:00",
   availableTo: "18:00",
+  buildingName: "MAIN",
+  block: "A",
+  floor: "",
+  hallNumber: "",
+  facilities: [],
   status: "ACTIVE"
 };
 
@@ -36,6 +49,11 @@ function cloneEmptyForm() {
     description: EMPTY_FORM.description,
     availableFrom: EMPTY_FORM.availableFrom,
     availableTo: EMPTY_FORM.availableTo,
+    buildingName: EMPTY_FORM.buildingName,
+    block: EMPTY_FORM.block,
+    floor: EMPTY_FORM.floor,
+    hallNumber: EMPTY_FORM.hallNumber,
+    facilities: EMPTY_FORM.facilities,
     status: EMPTY_FORM.status
   };
 }
@@ -46,6 +64,30 @@ function parseTimeToMinutes(raw) {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(text)) return -1;
   var parts = text.split(":");
   return Number(parts[0]) * 60 + Number(parts[1]);
+}
+
+function parseHallLocation(raw) {
+  if (typeof raw !== "string") return null;
+
+  var text = raw.trim();
+  if (!text) return null;
+
+  var parts = text.split("-");
+  if (parts.length !== 4) return null;
+
+  var floorValue = Number(parts[2]);
+  var hallNumberValue = Number(parts[3]);
+
+  if (!parts[0] || !parts[1] || !Number.isFinite(floorValue) || !Number.isFinite(hallNumberValue)) {
+    return null;
+  }
+
+  return {
+    buildingName: parts[0].trim().toUpperCase(),
+    block: parts[1].trim().toUpperCase(),
+    floor: String(floorValue),
+    hallNumber: String(hallNumberValue)
+  };
 }
 
 export default function ManageResources() {
@@ -108,6 +150,8 @@ export default function ManageResources() {
   }
 
   function openEdit(resource) {
+    var hallInfo = parseHallLocation(resource.hallId || resource.location);
+
     setEditingId(resource.id);
     setForm({
       name: resource.name || "",
@@ -117,6 +161,11 @@ export default function ManageResources() {
       description: resource.description || "",
       availableFrom: resource.availableFrom || "08:00",
       availableTo: resource.availableTo || "18:00",
+      buildingName: resource.buildingName || (hallInfo ? hallInfo.buildingName : "MAIN"),
+      block: resource.block || (hallInfo ? hallInfo.block : "A"),
+      floor: resource.floor != null ? String(resource.floor) : (hallInfo ? hallInfo.floor : ""),
+      hallNumber: resource.hallNumber != null ? String(resource.hallNumber) : (hallInfo ? hallInfo.hallNumber : ""),
+      facilities: Array.isArray(resource.facilities) ? resource.facilities : [],
       status: resource.status || "ACTIVE"
     });
     if (typeof window !== "undefined" && window.scrollTo) {
@@ -127,6 +176,16 @@ export default function ManageResources() {
   function resetForm() {
     setEditingId(null);
     setForm(cloneEmptyForm());
+  }
+
+  function toggleFacility(value) {
+    var key = String(value || "").toUpperCase();
+    var exists = form.facilities.indexOf(key) >= 0;
+    var next = exists
+      ? form.facilities.filter(function (f) { return f !== key; })
+      : form.facilities.concat([key]);
+
+    setForm({ ...form, facilities: next });
   }
 
   async function handleQuickStatusToggle(resource) {
@@ -149,17 +208,11 @@ export default function ManageResources() {
   async function handleSave() {
     var errors = {};
     setSuccessMessage("");
+    var generatedHallId = generateHallId(form.buildingName, form.block, form.floor, form.hallNumber);
 
     if (!form.name.trim()) {
       errors.name = "Name is required";
     }
-    if (!form.location.trim()) {
-      errors.location = "Location is required";
-    }
-    if (!form.description.trim()) {
-      errors.description = "Description is required";
-    }
-
     var numericCapacity = Number(form.capacity);
     if (!Number.isFinite(numericCapacity) || numericCapacity < 1) {
       errors.capacity = "Capacity must be at least 1";
@@ -174,6 +227,18 @@ export default function ManageResources() {
       errors.availableTime = "Available from must be earlier than available to";
     }
 
+    if (form.floor === "" || Number(form.floor) < 0) {
+      errors.floor = "Floor is required and must be 0 or greater";
+    }
+
+    if (form.hallNumber === "" || Number(form.hallNumber) < 1) {
+      errors.hallNumber = "Hall number is required and must be at least 1";
+    }
+
+    if (!generatedHallId) {
+      errors.hallId = "Select valid building/block/floor/hall number";
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       window.alert("Please fix the errors below before saving.");
@@ -186,10 +251,15 @@ export default function ManageResources() {
       name: form.name.trim(),
       type: form.type,
       capacity: numericCapacity,
-      location: form.location.trim(),
-      description: form.description.trim(),
+      location: generatedHallId,
+      description: form.description ? form.description.trim() : "",
       availableFrom: form.availableFrom,
       availableTo: form.availableTo,
+      buildingName: form.buildingName,
+      block: form.block,
+      floor: Number(form.floor),
+      hallNumber: Number(form.hallNumber),
+      facilities: form.facilities,
       status: form.status
     };
 
@@ -228,6 +298,14 @@ export default function ManageResources() {
   }
 
   var currentVisual = getResourceVisual(form.type);
+  var allowedBlocks = BLOCK_OPTIONS_BY_BUILDING[form.buildingName] || [];
+  var generatedHallId = generateHallId(form.buildingName, form.block, form.floor, form.hallNumber);
+  var totalResources = resources.length;
+  var activeResources = resources.filter(function (resource) { return resource.status === "ACTIVE"; }).length;
+  var outOfServiceResources = resources.filter(function (resource) { return resource.status === "OUT_OF_SERVICE"; }).length;
+  var facilityTaggedResources = resources.filter(function (resource) {
+    return Array.isArray(resource.facilities) && resource.facilities.length > 0;
+  }).length;
 
   var columns = [
     {
@@ -263,7 +341,15 @@ export default function ManageResources() {
       }
     },
     { key: "capacity", label: "Capacity" },
-    { key: "location", label: "Location" },
+    { key: "location", label: "Hall ID" },
+    {
+      key: "facilities",
+      label: "Facilities",
+      render: function (value) {
+        var list = Array.isArray(value) ? value : [];
+        return list.length > 0 ? list.length + " selected" : "-";
+      }
+    },
     {
       key: "status",
       label: "Status",
@@ -294,11 +380,18 @@ export default function ManageResources() {
       <div className="content-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1>Manage Resources</h1>
-          <p>Add, edit, and manage campus resources.</p>
+          <p>Track hall IDs, status, and available facilities in one place.</p>
         </div>
         <button className="btn-primary" style={{ width: "auto" }} onClick={openCreate}>
           Add Resource
         </button>
+      </div>
+
+      <div className="stats-grid animate-in" style={{ animationDelay: "0.08s" }}>
+        <StatCard icon="🏛️" label="Total Resources" value={totalResources} accent="var(--primary)" />
+        <StatCard icon="✅" label="Active" value={activeResources} accent="#34D399" />
+        <StatCard icon="⛔" label="Out of Service" value={outOfServiceResources} accent="#F87171" />
+        <StatCard icon="🔧" label="With Facilities" value={facilityTaggedResources} accent="#FBBF24" />
       </div>
 
       {error ? (
@@ -394,6 +487,100 @@ export default function ManageResources() {
 
             <div className="form-row">
               <div className="form-group">
+                <label className="form-label">Building</label>
+                <div className="form-input-wrapper">
+                  <select
+                    className="form-input"
+                    value={form.buildingName}
+                    onChange={function (e) {
+                      var nextBuilding = e.target.value;
+                      var nextBlocks = BLOCK_OPTIONS_BY_BUILDING[nextBuilding] || [];
+                      setForm({
+                        ...form,
+                        buildingName: nextBuilding,
+                        block: nextBlocks[0] || ""
+                      });
+                    }}
+                  >
+                    {BUILDING_OPTIONS.map(function (building) {
+                      return (
+                        <option key={building} value={building}>
+                          {building}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Block</label>
+                <div className="form-input-wrapper">
+                  <select
+                    className="form-input"
+                    value={form.block}
+                    onChange={function (e) { setForm({ ...form, block: e.target.value }); }}
+                  >
+                    {allowedBlocks.map(function (block) {
+                      return (
+                        <option key={block} value={block}>
+                          {block}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Floor</label>
+                <div className="form-input-wrapper">
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-input"
+                    value={form.floor}
+                    onChange={function (e) { setForm({ ...form, floor: e.target.value }); }}
+                    style={{ borderColor: formErrors.floor ? "#F87171" : undefined }}
+                  />
+                </div>
+                {formErrors.floor ? (
+                  <div className="rm-inline-error">{formErrors.floor}</div>
+                ) : null}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Hall Number</label>
+                <div className="form-input-wrapper">
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-input"
+                    value={form.hallNumber}
+                    onChange={function (e) { setForm({ ...form, hallNumber: e.target.value }); }}
+                    style={{ borderColor: formErrors.hallNumber ? "#F87171" : undefined }}
+                  />
+                </div>
+                {formErrors.hallNumber ? (
+                  <div className="rm-inline-error">{formErrors.hallNumber}</div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Generated Hall ID</label>
+              <div className="form-input-wrapper">
+                <input className="form-input" value={generatedHallId || "Auto-generated"} readOnly />
+              </div>
+              {formErrors.hallId ? (
+                <div className="rm-inline-error">{formErrors.hallId}</div>
+              ) : null}
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
                 <label className="form-label">Available From</label>
                 <div className="form-input-wrapper">
                   <input
@@ -426,20 +613,22 @@ export default function ManageResources() {
             ) : null}
 
             <div className="form-group">
-              <label className="form-label">Location</label>
-              <div className="form-input-wrapper">
-                <input
-                  className="form-input"
-                  value={form.location}
-                  onChange={function (e) { setForm({ ...form, location: e.target.value }); }}
-                  style={{ borderColor: formErrors.location ? "#F87171" : undefined }}
-                />
+              <label className="form-label">Available Facilities</label>
+              <div className="rm-facility-grid">
+                {FACILITY_OPTIONS.map(function (facility) {
+                  var active = form.facilities.indexOf(facility) >= 0;
+                  return (
+                    <button
+                      key={facility}
+                      type="button"
+                      className={"rm-facility-chip " + (active ? "rm-facility-chip--active" : "")}
+                      onClick={function () { toggleFacility(facility); }}
+                    >
+                      {formatFacilityName(facility)}
+                    </button>
+                  );
+                })}
               </div>
-              {formErrors.location ? (
-                <div style={{ fontSize: "0.75rem", color: "#F87171", marginTop: "4px" }}>
-                  {formErrors.location}
-                </div>
-              ) : null}
             </div>
 
             <div className="form-group">
