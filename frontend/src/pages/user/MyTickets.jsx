@@ -14,13 +14,25 @@ export default function MyTickets() {
   const [tickets, setTickets] = useState([]);
   const [activeTab, setActiveTab] = useState('ALL');
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [cancellingId, setCancellingId] = useState('');
+  const [editingTicketId, setEditingTicketId] = useState('');
 
   const [form, setForm] = useState({
     title: '',
     description: '',
     category: 'MAINTENANCE',
+    priority: 'MEDIUM',
+    location: '',
+    tags: '',
+  });
+
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
     priority: 'MEDIUM',
     location: '',
     tags: '',
@@ -62,6 +74,58 @@ export default function MyTickets() {
       await loadTickets();
     } finally {
       setCreating(false);
+    }
+  }
+
+  function openEdit(ticket) {
+    setEditingTicketId(ticket.id);
+    setEditForm({
+      title: ticket.title || '',
+      description: ticket.description || '',
+      priority: ticket.priority || 'MEDIUM',
+      location: ticket.location || '',
+      tags: Array.isArray(ticket.tags) ? ticket.tags.join(', ') : '',
+    });
+    setShowEdit(true);
+  }
+
+  async function handleUpdate(e) {
+    e.preventDefault();
+    if (!editingTicketId) return;
+    if (!editForm.title.trim() || !editForm.description.trim() || !editForm.location.trim()) return;
+
+    setUpdating(true);
+    try {
+      const tags = editForm.tags
+        ? editForm.tags.split(',').map((t) => t.trim()).filter(Boolean)
+        : [];
+
+      await ticketService.updateTicket(editingTicketId, {
+        title: editForm.title,
+        description: editForm.description,
+        priority: editForm.priority,
+        location: editForm.location,
+        tags,
+      });
+      setShowEdit(false);
+      setEditingTicketId('');
+      await loadTickets();
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleCancelTicket(ticket) {
+    const confirmed = window.confirm('Cancel this ticket? This action will mark it as rejected.');
+    if (!confirmed) return;
+    const reason = window.prompt('Optional reason for cancellation:', '') || '';
+
+    setCancellingId(ticket.id);
+    try {
+      await ticketService.cancelTicket(ticket.id, reason);
+      await loadTickets();
+    } finally {
+      setCancellingId('');
     }
   }
 
@@ -123,6 +187,26 @@ export default function MyTickets() {
                   <SLATimer deadline={ticket.slaDeadline} />
                 )}
               </div>
+
+              {ticket.status === 'OPEN' && (
+                <div className="my-ticket-actions" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => openEdit(ticket)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-danger"
+                    onClick={() => handleCancelTicket(ticket)}
+                    disabled={cancellingId === ticket.id}
+                  >
+                    {cancellingId === ticket.id ? 'Cancelling...' : 'Cancel Ticket'}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -203,6 +287,70 @@ export default function MyTickets() {
           </button>
         </form>
       </GlassModal>
+
+      <GlassModal open={showEdit} onClose={() => setShowEdit(false)} title="Edit Ticket" width={640}>
+        <form onSubmit={handleUpdate} className="auth-form" style={{ gap: 12 }}>
+          <div className="form-group">
+            <label className="form-label">Title</label>
+            <input
+              className="form-input"
+              value={editForm.title}
+              onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea
+              className="form-input"
+              rows={4}
+              value={editForm.description}
+              onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="form-group">
+              <label className="form-label">Priority</label>
+              <select
+                className="form-input"
+                value={editForm.priority}
+                onChange={(e) => setEditForm((p) => ({ ...p, priority: e.target.value }))}
+              >
+                {ticketPriorities.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Location</label>
+              <input
+                className="form-input"
+                value={editForm.location}
+                onChange={(e) => setEditForm((p) => ({ ...p, location: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Tags (comma separated)</label>
+            <input
+              className="form-input"
+              value={editForm.tags}
+              onChange={(e) => setEditForm((p) => ({ ...p, tags: e.target.value }))}
+            />
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={updating}>
+            {updating ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
+      </GlassModal>
+
     </div>
   );
 }

@@ -121,6 +121,36 @@ export const ticketService = {
     }
   },
 
+  updateTicket: async (id, data) => {
+    try { return (await api.patch(`/api/tickets/${id}`, data)).data; }
+    catch {
+      const t = mockTickets.find(t => t.id === id || t.ticketId === id);
+      if (!t || t.status !== 'OPEN') return null;
+      t.title = data.title;
+      t.description = data.description;
+      t.priority = data.priority;
+      t.location = data.location;
+      t.tags = data.tags || [];
+      t.updatedAt = new Date().toISOString();
+      t.slaStatus = computeSlaStatus(t);
+      return { ...t };
+    }
+  },
+
+  cancelTicket: async (id, reason = '') => {
+    try { return (await api.post(`/api/tickets/${id}/cancel`, { reason })).data; }
+    catch {
+      const t = mockTickets.find(t => t.id === id || t.ticketId === id);
+      if (!t || t.status !== 'OPEN' || t.assignedTechnician) return null;
+      t.status = 'REJECTED';
+      t.rejectionReason = reason?.trim() ? `Cancelled by user: ${reason.trim()}` : 'Cancelled by user';
+      t.closedAt = new Date().toISOString();
+      t.updatedAt = new Date().toISOString();
+      t.slaStatus = computeSlaStatus(t);
+      return { ...t };
+    }
+  },
+
   updateStatus: async (id, statusData) => {
     try { return (await api.put(`/api/tickets/${id}/status`, statusData)).data; }
     catch {
