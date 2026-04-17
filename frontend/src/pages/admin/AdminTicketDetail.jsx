@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ticketService, commentService, timelineService } from '../../services/ticketService';
 import { userService } from '../../services/api';
 import { categoryLabels, statusLabels } from '../../mock/tickets';
@@ -24,6 +24,7 @@ const ADMIN_ACTIONS = {
 export default function AdminTicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [ticket, setTicket]           = useState(null);
   const [comments, setComments]       = useState([]);
@@ -52,6 +53,17 @@ export default function AdminTicketDetail() {
 
   useEffect(() => { loadAll(); }, [id]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [comments.length]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'timeline') {
+      setActiveTab('timeline');
+      return;
+    }
+    if (tab === 'chat' || tab === 'conversation') {
+      setActiveTab('chat');
+    }
+  }, [location.search]);
 
   async function loadAll() {
     setLoading(true);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { notificationService } from '../services/api';
+import { notificationService } from '../services/notificationService';
 
 /**
  * Hook to manage notifications for a given role.
@@ -10,11 +10,16 @@ export function useNotifications(role) {
 
   const refresh = useCallback(async () => {
     if (!role) return;
-    const data = await notificationService.getByRole(role);
-    setNotifications(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    const data = await notificationService.getNotifications(role);
+    const rows = Array.isArray(data) ? data : [];
+    setNotifications(rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
   }, [role]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+    const timerId = window.setInterval(refresh, 30000);
+    return () => window.clearInterval(timerId);
+  }, [refresh]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

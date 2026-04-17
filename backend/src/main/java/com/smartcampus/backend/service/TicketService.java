@@ -2,6 +2,7 @@ package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.dto.*;
 import com.smartcampus.backend.exception.InvalidStatusTransitionException;
+import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.Ticket;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.model.enums.*;
@@ -82,6 +83,21 @@ public class TicketService {
         // System comment
         commentService.addSystemComment(saved.getId(),
                 "Ticket " + ticketId + " created by " + actor.getName());
+
+        // Notify admins about new ticket creation.
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            if (admin.getId() == null || admin.getId().equals(actor.getId())) {
+            continue;
+            }
+            notificationService.notify(
+                admin.getId(),
+                "TICKET_CREATED",
+                "New ticket " + saved.getTicketId(),
+                actor.getName() + " reported: " + saved.getTitle(),
+                saved.getId()
+            );
+        }
 
         // Check for recurring issues
         TicketResponse response = TicketResponse.from(saved);

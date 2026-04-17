@@ -4,6 +4,7 @@ import com.smartcampus.backend.model.TicketNotification;
 import com.smartcampus.backend.repository.TicketNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -63,6 +64,21 @@ public class TicketNotificationService {
     }
 
     /**
+     * Mark a notification as read only if it belongs to the recipient.
+     */
+    public void markAsReadForRecipient(String notificationId, String recipientId) {
+        TicketNotification notification = notificationRepository
+                .findByIdAndRecipientId(notificationId, recipientId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Notification not found"
+                ));
+
+        notification.setRead(true);
+        notificationRepository.save(notification);
+    }
+
+    /**
      * Mark all notifications for user as read.
      */
     public void markAllAsRead(String recipientId) {
@@ -70,5 +86,12 @@ public class TicketNotificationService {
                 .findByRecipientIdAndIsReadFalse(recipientId);
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
+    }
+
+    /**
+     * Delete all notifications for a user.
+     */
+    public void clearAllForRecipient(String recipientId) {
+        notificationRepository.deleteByRecipientId(recipientId);
     }
 }

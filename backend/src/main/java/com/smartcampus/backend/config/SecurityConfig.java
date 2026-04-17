@@ -20,6 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
@@ -65,6 +67,11 @@ public class SecurityConfig {
 
             .oauth2Login(oauth -> oauth
                 .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
+                .failureHandler((request, response, exception) -> {
+                    String message = exception.getMessage() == null ? "Google sign-in failed" : exception.getMessage();
+                    String encoded = URLEncoder.encode(message, StandardCharsets.UTF_8);
+                    response.sendRedirect(frontendUrl + "/login?oauthError=" + encoded);
+                })
                 .successHandler(successHandler)
             );
 
