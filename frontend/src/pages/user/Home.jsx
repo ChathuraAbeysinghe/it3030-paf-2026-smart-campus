@@ -7,7 +7,7 @@ import '../homepage.css';
 import './dashboard.css';
 
 /**
- * Student Home â€” updated to match the public homepage visual language.
+ * Student Home updated to match the public homepage visual language.
  */
 export default function Home() {
   const { user } = useAuth();
@@ -35,37 +35,37 @@ export default function Home() {
     {
       title: 'Book a Resource',
       description: 'Reserve labs, study rooms, and equipment',
-      icon: 'ðŸ“…',
+      icon: 'BK',
       tone: 'amber',
       onClick: () => navigate('/resources'),
     },
     {
       title: 'Report an Issue',
       description: 'Submit and track maintenance requests',
-      icon: 'ðŸš¨',
+      icon: 'IS',
       tone: 'orange',
       onClick: () => navigate('/my-tickets'),
     },
     {
       title: 'My Bookings',
       description: 'Check status and approvals instantly',
-      icon: 'ðŸ“‹',
+      icon: 'MB',
       tone: 'teal',
       onClick: () => navigate('/my-bookings'),
     },
     {
       title: 'My Profile',
       description: 'Manage account details and password',
-      icon: 'ðŸ‘¤',
+      icon: 'PR',
       tone: 'indigo',
       onClick: () => navigate('/profile'),
     },
   ];
 
   const activity = [
-    { icon: 'âœ…', title: 'Latest booking synced', subtitle: 'Your reservations are up to date', time: 'Just now' },
-    { icon: 'ðŸŽ«', title: 'Ticket tracker ready', subtitle: 'Open issues are visible in My Tickets', time: '5m ago' },
-    { icon: 'ðŸ””', title: 'Notification center active', subtitle: 'Check bell icon for updates', time: '12m ago' },
+    { icon: 'OK', title: 'Latest booking synced', subtitle: 'Your reservations are up to date', time: 'Just now' },
+    { icon: 'TK', title: 'Ticket tracker ready', subtitle: 'Open issues are visible in My Tickets', time: '5m ago' },
+    { icon: 'NT', title: 'Notification center active', subtitle: 'Check bell icon for updates', time: '12m ago' },
   ];
 
   const upcoming = [
@@ -88,7 +88,7 @@ export default function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
               <div>
                 <p style={{ marginBottom: 8, fontWeight: 600, color: '#D4891A' }}>Student Dashboard</p>
-                <h2 style={{ marginBottom: 8 }}>Welcome back, {user?.name?.split(' ')[0]} ðŸ‘‹</h2>
+                <h2 style={{ marginBottom: 8 }}>Welcome back, {firstName}</h2>
                 <p style={{ margin: 0, maxWidth: 620 }}>
                   Same modern experience as the new homepage, now personalized for your day-to-day campus tasks.
                 </p>
@@ -102,22 +102,22 @@ export default function Home() {
         <div className="hp-container" style={{ width: '100%', marginTop: 18 }}>
           <div className="hp-stats" style={{ gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))' }}>
             <article className="hp-stat-card hp-stat-card--navy is-visible">
-              <div className="hp-stat-card__icon">ðŸ—“ï¸</div>
+              <div className="hp-stat-card__icon" aria-hidden="true">BK</div>
               <div className="hp-stat-card__value">{stats.bookings}</div>
               <div className="hp-stat-card__label">ACTIVE BOOKINGS</div>
             </article>
             <article className="hp-stat-card hp-stat-card--amber is-visible">
-              <div className="hp-stat-card__icon">âš ï¸</div>
+              <div className="hp-stat-card__icon" aria-hidden="true">TK</div>
               <div className="hp-stat-card__value">{stats.tickets}</div>
               <div className="hp-stat-card__label">OPEN TICKETS</div>
             </article>
             <article className="hp-stat-card hp-stat-card--navy is-visible">
-              <div className="hp-stat-card__icon">ðŸ›ï¸</div>
+              <div className="hp-stat-card__icon" aria-hidden="true">RS</div>
               <div className="hp-stat-card__value">8</div>
               <div className="hp-stat-card__label">AVAILABLE RESOURCES</div>
             </article>
             <article className="hp-stat-card hp-stat-card--green is-visible">
-              <div className="hp-stat-card__icon">ðŸ””</div>
+              <div className="hp-stat-card__icon" aria-hidden="true">NT</div>
               <div className="hp-stat-card__value">3</div>
               <div className="hp-stat-card__label">NEW NOTIFICATIONS</div>
             </article>
@@ -166,7 +166,7 @@ export default function Home() {
               <ul className="hp-feed-list">
                 {activity.map((item) => (
                   <li key={item.title}>
-                    <div className="hp-feed-list__icon">{item.icon}</div>
+                    <div className="hp-feed-list__icon" aria-hidden="true">{item.icon}</div>
                     <div>
                       <h4>{item.title}</h4>
                       <p>{item.subtitle}</p>
