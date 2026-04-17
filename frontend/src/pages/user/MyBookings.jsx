@@ -5,6 +5,7 @@ import StatusBadge from '../../components/StatusBadge';
 import QRCheckin from '../../components/QRCheckin';
 import GlassModal from '../../components/GlassModal';
 import BookingForm from '../../components/BookingForm';
+<<<<<<< Updated upstream
 import ResourcePicker from '../../components/BookingResourcePicker';
 
 const STATUS_FILTERS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
@@ -20,6 +21,9 @@ const TYPE_ICONS = {
 };
 
 // step: 'list' | 'pick' | 'form' | 'edit'
+=======
+import './modern-pages.css';
+>>>>>>> Stashed changes
 
 export default function MyBookings() {
   const { user } = useAuth();
@@ -100,6 +104,7 @@ export default function MyBookings() {
   }, {});
 
   return (
+<<<<<<< Updated upstream
     <div className="page-content animate-in">
 
       {/* ── Header ────────────────────────────────────────────── */}
@@ -132,6 +137,12 @@ export default function MyBookings() {
             ✕ Cancel
           </button>
         )}
+=======
+    <div className="page-content animate-in user-modern-page">
+      <div className="content-header">
+        <h1>My Bookings</h1>
+        <p>Create, edit, and manage your booking requests.</p>
+>>>>>>> Stashed changes
       </div>
 
       {/* ── Breadcrumb ────────────────────────────────────────── */}
@@ -170,7 +181,11 @@ export default function MyBookings() {
 
       {/* ── Error ─────────────────────────────────────────────── */}
       {error && (
+<<<<<<< Updated upstream
         <div className="glass-card" style={{ marginBottom: 14, color: '#F87171', border: '1px solid rgba(248,113,113,0.35)', padding: '12px 16px' }}>
+=======
+        <div className="modern-inline-card modern-inline-card--error" style={{ marginBottom: 14 }}>
+>>>>>>> Stashed changes
           {error}
         </div>
       )}
@@ -188,6 +203,7 @@ export default function MyBookings() {
         />
       )}
 
+<<<<<<< Updated upstream
       {/* ══ STEP: FORM ════════════════════════════════════════════ */}
       {step === 'form' && (
         <BookingForm
@@ -230,6 +246,13 @@ export default function MyBookings() {
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</span>
               </div>
             ))}
+=======
+      <div className="booking-list">
+        {bookings.length === 0 && (
+          <div className="modern-inline-card modern-inline-card--info" style={{ padding: 48, textAlign: 'center' }}>
+            <p style={{ fontSize: '2rem', marginBottom: 12 }}>📅</p>
+            <p>No bookings yet. Browse resources to make your first booking.</p>
+>>>>>>> Stashed changes
           </div>
 
           {/* ── Filter Bar ──────────────────────────────────────── */}

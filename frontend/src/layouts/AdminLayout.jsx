@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/admin/bookings',      icon: '📅', label: 'Bookings'      },
   { to: '/admin/tickets',       icon: '🎫', label: 'Tickets'       },
   { to: '/admin/notifications', icon: '🔔', label: 'Notifications' },
+  { to: '/admin/profile',       icon: '👤', label: 'Profile'       },
 ];
 
 export default function AdminLayout() {
@@ -49,7 +50,7 @@ export default function AdminLayout() {
           <div>
             <div
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', marginBottom: 8, cursor: 'pointer' }}
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/admin/profile')}
             >
               {user.picture
                 ? <img src={user.picture} alt="" className="user-avatar" style={{ width: 36, height: 36 }} />

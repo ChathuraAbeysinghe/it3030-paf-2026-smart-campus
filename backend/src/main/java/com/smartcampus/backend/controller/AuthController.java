@@ -1,5 +1,6 @@
 package com.smartcampus.backend.controller;
 
+import com.smartcampus.backend.dto.ChangePasswordRequest;
 import com.smartcampus.backend.dto.LoginRequest;
 import com.smartcampus.backend.dto.RegisterRequest;
 import com.smartcampus.backend.model.Role;
@@ -13,8 +14,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
@@ -160,5 +163,68 @@ public class AuthController {
             session.invalidate();
         }
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    /**
+     * POST /api/auth/change-password
+     * Changes the password for the currently authenticated user.
+     * Supports both OAuth2 and manual login sessions.
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest httpRequest) {
+
+        // Get current user email from OAuth2 or session
+        String userEmail = null;
+
+        // Try OAuth2 first
+        if (principal != null) {
+            userEmail = principal.getAttribute("email");
+        } else {
+            // Fallback: get from manual login session
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                String userId = (String) session.getAttribute("manualUserId");
+                if (userId != null) {
+                    Optional<User> userOptional = userRepository.findById(userId);
+                    if (userOptional.isPresent()) {
+                        userEmail = userOptional.get().getEmail();
+                    }
+                }
+            }
+        }
+
+        // Not authenticated
+        if (userEmail == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        // Find user by email
+        Optional<User> userOptional = userRepository.findByEmail(userEmail);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+
+        User user = userOptional.get();
+
+        // Users registered via OAuth2 (no password) cannot change password
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.status(400).body(Map.of(
+                "error", "This account uses Google login and cannot change password through this endpoint"
+            ));
+        }
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Current password is incorrect"));
+        }
+
+        // Update to new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 }

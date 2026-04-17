@@ -3,6 +3,7 @@ import { resourceService } from "../../services/api";
 import { formatResourceType, getResourceVisual } from "../../components/resource/resourceVisuals";
 import ResourceDetailsModal from "../../components/resource/ResourceDetailsModal";
 import "../../components/resource/resource-management.css";
+import "./modern-pages.css";
 
 var RESOURCE_TYPES = [
   "ALL",
@@ -64,13 +65,13 @@ export default function Resources() {
   }
 
   return (
-    <div className="page-content animate-in">
+    <div className="page-content animate-in user-modern-page user-modern-resources">
       <div className="content-header">
         <h1>Campus Resources</h1>
         <p>View available campus facilities and assets.</p>
       </div>
 
-      <div className="filter-bar glass-card">
+      <div className="filter-bar glass-card modern-panel">
         <div className="filter-search">
           <span className="form-input-icon">Search</span>
           <input
@@ -98,15 +99,15 @@ export default function Resources() {
       </div>
 
       {error ? (
-        <div className="glass-card" style={{ marginBottom: 16, color: "#F87171" }}>
+        <div className="modern-inline-card modern-inline-card--error" style={{ marginBottom: 16 }}>
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="glass-card" style={{ padding: 20 }}>Loading resources...</div>
+        <div className="modern-inline-card modern-inline-card--info">Loading resources...</div>
       ) : resources.length === 0 ? (
-        <div className="glass-card" style={{ padding: 20 }}>No resources found.</div>
+        <div className="modern-inline-card modern-inline-card--info">No resources found.</div>
       ) : (
         <div className="rm-card-grid">
           {resources.map(function (resource) {
@@ -116,7 +117,7 @@ export default function Resources() {
 
             return (
               <div
-                className="glass-card rm-resource-card"
+                className="glass-card rm-resource-card modern-panel modern-resource-card"
                 key={resource.id}
                 onClick={function () { setSelectedResource(resource); }}
                 style={{
