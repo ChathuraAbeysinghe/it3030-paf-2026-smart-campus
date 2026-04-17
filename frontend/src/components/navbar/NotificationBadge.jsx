@@ -24,7 +24,7 @@ export default function NotificationBadge({ role = 'USER' }) {
 
   const loadNotifications = useCallback(async () => {
     const data = await notificationService.getNotifications(role);
-    setNotifications(data);
+    setNotifications(Array.isArray(data) ? data : []);
   }, [role]);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function NotificationBadge({ role = 'USER' }) {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [open]);
 
-  const unreadCount = notifications.filter((item) => !item.read).length;
+  const unreadCount = notifications.filter((item) => !item?.read).length;
 
   const handleRead = async (id) => {
     await notificationService.markAsRead(id);

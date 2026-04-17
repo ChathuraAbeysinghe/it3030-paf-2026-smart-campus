@@ -19,8 +19,9 @@ export const notificationService = {
   async getNotifications(role) {
     try {
       const { data } = await api.get('/api/notifications', { params: { role } });
-      return data;
-    } catch {
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.warn('Could not load notifications:', error?.message || error);
       // Fallback: filter mock store by role
       return _mockStore
         .filter(n => n.role === role)
