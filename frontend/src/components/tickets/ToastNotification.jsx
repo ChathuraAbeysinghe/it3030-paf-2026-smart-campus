@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle2, XCircle, TriangleAlert, Info } from 'lucide-react';
 
 /**
  * Toast Notification System — top-right stack with auto-dismiss.
@@ -45,13 +46,23 @@ export default function ToastContainer() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const icons = {
+    success: CheckCircle2,
+    error: XCircle,
+    warning: TriangleAlert,
+    info: Info,
+  };
 
   return (
     <div className="toast-container">
       {toasts.map(t => (
         <div key={t.id} className={`toast-item toast-${t.type} ${t.entering ? 'toast-entering' : ''}`}>
-          <span className="toast-icon">{icons[t.type] || 'ℹ️'}</span>
+          <span className="toast-icon">
+            {(() => {
+              const Icon = icons[t.type] || Info;
+              return <Icon size={14} />;
+            })()}
+          </span>
           <span className="toast-message">{t.message}</span>
           <button className="toast-dismiss" onClick={() => dismiss(t.id)}>×</button>
         </div>

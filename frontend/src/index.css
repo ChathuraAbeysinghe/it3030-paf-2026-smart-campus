@@ -1,12 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-indigo-600: #4F46E5;
+  --color-indigo-700: #4338CA;
+  --color-indigo-500: #6366F1;
+  --color-slate-50: #F8FAFC;
+  --color-slate-200: #E2E8F0;
+  --color-slate-500: #64748B;
+  --color-slate-900: #0F172A;
+  
+  --radius-2xl: 1rem;
+  --radius-xl: 0.75rem;
+}
+
 /* ============================================================
    Smart Campus Operations Hub — Global Design System
    Palette: #222831 / #393E46 / #00ADB5 / #EEEEEE
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap');
-
 /* ── Reset & Base ─────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
 
 :root {
   /* Brand */
@@ -55,16 +69,16 @@
 html, body, #root {
   height: 100%;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
   -webkit-font-smoothing: antialiased;
 }
 
 /* ── Typography ───────────────────────────────────────────── */
-h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; font-family: 'Montserrat', sans-serif; }
-h2 { font-size: 1.5rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
-h3 { font-size: 1.2rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
-p  { line-height: 1.6; color: var(--text-muted); }
+:where(h1) { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; font-family: 'Montserrat', sans-serif; }
+:where(h2) { font-size: 1.5rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+:where(h3) { font-size: 1.2rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+:where(p)  { line-height: 1.6; color: var(--text-muted); }
 
 /* ── Glassmorphism Card ───────────────────────────────────── */
 .glass-card {
