@@ -8,15 +8,24 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\TicketTimelineController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Resource.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceStatus.java
+<<<<<<< Updated upstream
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\SlaStatus.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketPriority.java
+=======
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingResponse.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\ChangePasswordRequest.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\SecurityConfig.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingRequest.java
+>>>>>>> Stashed changes
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\ResourceRepository.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingDecisionRequest.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\OAuth2AuthenticationSuccessHandler.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\CustomOAuth2UserService.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\DisputeRequest.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\DataSeederConfig.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\AuthController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\CreateTicketRequest.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\JwtService.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\ResourceController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\BookingType.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\TicketService.java
@@ -32,6 +41,7 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketStatus.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\TicketTimelineRepository.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Ticket.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\JwtAuthenticationFilter.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\ResourceService.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\UserController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\AssignTicketRequest.java
@@ -44,6 +54,7 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingResponse.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\TicketTimeline.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\SecurityConfig.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\UsersController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingRequest.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\TicketNotification.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\TicketStatsResponse.java
@@ -59,34 +70,3 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceType.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\SmartCampusBackendApplication.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\TicketNotificationService.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingRequest.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\LoginRequest.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\CustomOAuth2UserService.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\SecurityConfig.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\AuthController.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Booking.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\ResourceService.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\SmartCampusBackendApplication.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\ApiExceptionHandler.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\BookingStatus.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceType.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\CurrentUserService.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\RegisterRequest.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingResponse.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\ResourceRequest.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\ResourceMongoConvertersConfig.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\UserRepository.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\BookingType.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\User.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\UserController.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\OAuth2AuthenticationSuccessHandler.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\BookingController.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingDecisionRequest.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Resource.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Role.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\ResourceRepository.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\ResourceController.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\BookingRepository.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\BookingService.java
-D:\PAF_ASSIGNMENT\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceStatus.java
-

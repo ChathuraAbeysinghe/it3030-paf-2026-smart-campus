@@ -9,6 +9,15 @@ import { mockTickets } from '../mock/tickets';
 import { mockUsers, mockTechnicians } from '../mock/users';
 import { mockNotifications } from '../mock/notifications';
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // ── localStorage Persistence ──────────────────────────────
 function loadStoredBookings() {
   try {

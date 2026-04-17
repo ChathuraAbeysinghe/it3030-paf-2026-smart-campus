@@ -1,4 +1,5 @@
 :root {
+<<<<<<< Updated upstream
   --nav-guest-bg: var(--color-navy, #1B2A4A);
   --nav-guest-text: #FFFFFF;
   --nav-guest-active: var(--color-yellow, #F5A623);
@@ -11,6 +12,20 @@
   --nav-auth-active-text: #FFFFFF;
   --nav-auth-icon-bg: rgba(255, 255, 255, 0.08);
   --nav-auth-badge: var(--color-danger, #EF4444);
+=======
+  --nav-guest-bg: #1B2A4A;
+  --nav-guest-text: #FFFFFF;
+  --nav-guest-active: #F5A623;
+  --nav-guest-btn-bg: #F5A623;
+  --nav-guest-btn-text: #1B2A4A;
+
+  --nav-auth-bg: #1B2A4A;
+  --nav-auth-text: rgba(255, 255, 255, 0.85);
+  --nav-auth-active-bg: rgba(245, 166, 35, 0.15);
+  --nav-auth-active-text: #F5A623;
+  --nav-auth-icon-bg: rgba(255, 255, 255, 0.08);
+  --nav-auth-badge: #EF4444;
+>>>>>>> Stashed changes
 }
 
 .guest-nav,
@@ -19,7 +34,10 @@
   top: 0;
   z-index: 120;
   animation: navFadeIn 0.2s ease;
+<<<<<<< Updated upstream
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+=======
+>>>>>>> Stashed changes
 }
 
 .guest-nav {
@@ -29,7 +47,11 @@
 }
 
 .guest-nav.is-scrolled {
+<<<<<<< Updated upstream
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+=======
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+>>>>>>> Stashed changes
 }
 
 .guest-nav__inner,
@@ -76,7 +98,11 @@
 }
 
 .guest-nav__brand-text {
+<<<<<<< Updated upstream
   color: #ffffff;
+=======
+  color: #FFFFFF;
+>>>>>>> Stashed changes
   font-weight: 600;
   font-size: 16px;
   font-family: 'Montserrat', sans-serif;
@@ -135,8 +161,13 @@
 }
 
 .guest-nav__btn--outline {
+<<<<<<< Updated upstream
   background-color: #F5A623;
   color: #ffffff;
+=======
+  background: transparent;
+  color: #FFFFFF;
+>>>>>>> Stashed changes
   border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
@@ -193,16 +224,28 @@
 
 .auth-nav {
   background: var(--nav-auth-bg);
+<<<<<<< Updated upstream
   min-height: 64px;
+=======
+  min-height: 60px;
+>>>>>>> Stashed changes
   transition: box-shadow 0.2s ease;
 }
 
 .auth-nav.is-scrolled {
+<<<<<<< Updated upstream
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .auth-nav__inner {
   min-height: 64px;
+=======
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.auth-nav__inner {
+  min-height: 60px;
+>>>>>>> Stashed changes
 }
 
 .auth-nav__brand {
@@ -231,6 +274,7 @@
   justify-content: center;
 }
 
+<<<<<<< Updated upstream
 .auth-nav__tab,
 .auth-nav .nav-link {
   text-decoration: none;
@@ -255,6 +299,27 @@
   background: var(--nav-auth-active-bg);
   color: var(--nav-auth-active-text);
   border-bottom-color: var(--color-yellow, #F5A623);
+=======
+.auth-nav__tab {
+  text-decoration: none;
+  color: var(--nav-auth-text);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px 6px;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.auth-nav__tab:hover {
+  color: #FFFFFF;
+}
+
+.auth-nav__tab.is-active {
+  background: var(--nav-auth-active-bg);
+  color: var(--nav-auth-active-text);
+  border-bottom-color: #F5A623;
+>>>>>>> Stashed changes
 }
 
 .auth-nav__right {
@@ -278,6 +343,14 @@
   cursor: pointer;
 }
 
+<<<<<<< Updated upstream
+=======
+.auth-notification__icon {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+>>>>>>> Stashed changes
 .auth-notification__badge {
   position: absolute;
   top: -5px;
@@ -291,7 +364,11 @@
   line-height: 17px;
   font-weight: 700;
   padding: 0 4px;
+<<<<<<< Updated upstream
   border: 2px solid var(--nav-auth-bg);
+=======
+  border: 2px solid #1B2A4A;
+>>>>>>> Stashed changes
 }
 
 .auth-notification__panel {
@@ -546,7 +623,10 @@
 }
 
 @media (max-width: 1024px) {
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
   .guest-nav__links,
   .guest-nav__actions,
   .auth-nav__links,
@@ -562,7 +642,11 @@
 
   .guest-nav__inner,
   .auth-nav__inner {
+<<<<<<< Updated upstream
     min-height: 56px;
+=======
+    min-height: 60px;
+>>>>>>> Stashed changes
   }
 }
 
@@ -573,7 +657,11 @@
     right: 0;
     bottom: 0;
     z-index: 125;
+<<<<<<< Updated upstream
     background: #1a1a2e;
+=======
+    background: #1B2A4A;
+>>>>>>> Stashed changes
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -625,8 +713,15 @@
   from {
     opacity: 0;
   }
+<<<<<<< Updated upstream
 
   to {
     opacity: 1;
   }
 }
+=======
+  to {
+    opacity: 1;
+  }
+}
+>>>>>>> Stashed changes

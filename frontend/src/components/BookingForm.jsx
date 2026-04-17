@@ -8,7 +8,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { bookingService } from '../services/api';
 import AvailabilityChecker from './AvailabilityChecker';
+<<<<<<< Updated upstream
 import { getResourceVisual, formatResourceType } from './resource/resourceVisuals';
+=======
+import '../pages/user/modern-pages.css';
+>>>>>>> Stashed changes
 
 const MIN_OCCUPANCY = 0.60;
 
@@ -150,6 +154,7 @@ export default function BookingForm({
   const visual = currentResource ? getResourceVisual(currentResource.type) : null;
 
   return (
+<<<<<<< Updated upstream
     <div className="glass-card animate-in" style={{ padding: 20, marginBottom: 20 }}>
       <h2 style={{ marginBottom: 4 }}>
         {isEdit ? 'Edit Booking' : '📅 Complete Your Booking'}
@@ -162,10 +167,21 @@ export default function BookingForm({
 
       {error && (
         <div className="glass-card" style={{ marginBottom: 12, color: '#F87171', border: '1px solid rgba(248,113,113,0.35)', padding: '10px 14px' }}>
+=======
+    <div className="glass-card modern-booking-form modern-panel">
+      <h2>{isEdit ? 'Edit Booking' : 'Create Booking Request'}</h2>
+      <p>
+        Fill in the booking details and verify availability before submitting.
+      </p>
+
+      {error && (
+        <div className="modern-inline-card modern-inline-card--error" style={{ marginBottom: 12 }}>
+>>>>>>> Stashed changes
           {error}
         </div>
       )}
 
+<<<<<<< Updated upstream
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
 
         {/* ── Selected Resource Card ──────────────────────────── */}
@@ -199,6 +215,73 @@ export default function BookingForm({
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   {currentResource.description}
                 </div>
+=======
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
+        <div className="modern-booking-form__grid">
+          <select
+            className="form-input modern-standalone-input"
+            value={form.facilityId}
+            onChange={function (e) { onChange('facilityId', e.target.value); }}
+            required
+          >
+            <option value="">Select Facility</option>
+            {(resources || []).map(function (resource) {
+              return (
+                <option key={resource.id} value={resource.id}>
+                  {/* ── NEW: show capacity in dropdown ── */}
+                  {resource.name} (Cap: {resource.capacity})
+                </option>
+              );
+            })}
+          </select>
+
+          <input
+            className="form-input modern-standalone-input"
+            type="date"
+            value={form.date}
+            onChange={function (e) { onChange('date', e.target.value); }}
+            required
+          />
+
+          <input
+            className="form-input modern-standalone-input"
+            type="time"
+            value={form.startTime}
+            onChange={function (e) { onChange('startTime', e.target.value); }}
+            required
+          />
+
+          <input
+            className="form-input modern-standalone-input"
+            type="time"
+            value={form.endTime}
+            onChange={function (e) { onChange('endTime', e.target.value); }}
+            required
+          />
+
+          <input
+            className="form-input modern-standalone-input"
+            type="number"
+            min="1"
+            max={capacity || undefined}
+            value={form.attendees}
+            onChange={function (e) { onChange('attendees', e.target.value); }}
+            placeholder="Expected attendees"
+            required
+            // ── NEW: border color changes based on validation ──
+            style={{ borderColor: overCapacity ? '#F87171' : belowMinimum ? '#FBBF24' : undefined }}
+          />
+        </div>
+
+        {/* ── NEW: Capacity validation panel ── */}
+        {selectedResource && capacity != null && (
+          <div className={`glass-card modern-capacity-panel ${overCapacity ? 'modern-capacity-panel--error' : belowMinimum ? 'modern-capacity-panel--warning' : 'modern-capacity-panel--ok'}`}>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.83rem' }}>
+              <span>🏛️ <strong>Capacity:</strong> {capacity}</span>
+              <span>👥 <strong>Min required (60%):</strong> {minRequired}</span>
+              {attendees > 0 && !overCapacity && (
+                <span>📊 <strong>Occupancy:</strong> {Math.round((attendees / capacity) * 100)}%</span>
+>>>>>>> Stashed changes
               )}
             </div>
 
@@ -231,6 +314,7 @@ export default function BookingForm({
           </select>
         )}
 
+<<<<<<< Updated upstream
         {/* ── Date + Time row ─────────────────────────────────── */}
           <div className="form-group">
         {/* ── Availability checker ────────────────────────────── */}
@@ -238,6 +322,34 @@ export default function BookingForm({
           <div className="glass-card" style={{ color: 'var(--text-muted)', padding: '10px 14px' }}>
             Checking availability...
           </div>
+=======
+        {/* ── NEW: Booking type badge ── */}
+        {bookingTypeLabel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Submission type:</span>
+            <span style={{
+              fontSize: '0.75rem', fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+              background: bookingTypeLabel === 'BOOKING' ? 'rgba(52,211,153,0.18)' : 'rgba(251,191,36,0.18)',
+              color: bookingTypeLabel === 'BOOKING' ? '#34D399' : '#FBBF24',
+              border: bookingTypeLabel === 'BOOKING' ? '1px solid rgba(52,211,153,0.4)' : '1px solid rgba(251,191,36,0.4)',
+            }}>
+              {bookingTypeLabel === 'BOOKING' ? '📋 BOOKING' : '📩 REQUEST'}
+            </span>
+          </div>
+        )}
+
+        <textarea
+          className="form-input modern-standalone-input"
+          rows="3"
+          value={form.purpose}
+          onChange={function (e) { onChange('purpose', e.target.value); }}
+          placeholder="Purpose of booking"
+          required
+        />
+
+        {loadingConflicts ? (
+          <div className="modern-inline-card modern-inline-card--info">Checking availability...</div>
+>>>>>>> Stashed changes
         ) : (
           <AvailabilityChecker
             conflicts={conflicts}

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MobileDrawer from './MobileDrawer';
+<<<<<<< Updated upstream
 import './navbar.css';
+=======
+>>>>>>> Stashed changes
 
 const SECTION_LINKS = [
   { id: 'home', label: 'Home' },
@@ -11,7 +14,11 @@ const SECTION_LINKS = [
   { id: 'about', label: 'About' },
 ];
 
+<<<<<<< Updated upstream
 function GuestNav({ currentPath }) {
+=======
+export default function GuestNav({ currentPath }) {
+>>>>>>> Stashed changes
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeId, setActiveId] = useState('home');
@@ -24,7 +31,11 @@ function GuestNav({ currentPath }) {
   );
 
   useEffect(() => {
+<<<<<<< Updated upstream
     const onScroll = () => setScrolled(window.scrollY > 60);
+=======
+    const onScroll = () => setScrolled(window.scrollY > 80);
+>>>>>>> Stashed changes
     onScroll();
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
@@ -81,7 +92,11 @@ function GuestNav({ currentPath }) {
         </nav>
 
         <div className="guest-nav__actions">
+<<<<<<< Updated upstream
           
+=======
+          <Link to="/login" className="guest-nav__btn guest-nav__btn--primary">Report Item</Link>
+>>>>>>> Stashed changes
           <Link to="/login" className="guest-nav__link">Login</Link>
           <Link to="/register" className="guest-nav__btn guest-nav__btn--outline">Register</Link>
         </div>
@@ -104,6 +119,10 @@ function GuestNav({ currentPath }) {
         title="Menu"
         links={links}
         actions={[
+<<<<<<< Updated upstream
+=======
+          { label: 'Report Item', to: '/login', kind: 'primary' },
+>>>>>>> Stashed changes
           { label: 'Login', to: '/login', kind: 'ghost' },
           { label: 'Register', to: '/register', kind: 'outline' },
         ]}
@@ -112,5 +131,8 @@ function GuestNav({ currentPath }) {
     </header>
   );
 }
+<<<<<<< Updated upstream
 
 export default GuestNav;
+=======
+>>>>>>> Stashed changes

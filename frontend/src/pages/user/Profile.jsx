@@ -1,13 +1,27 @@
+<<<<<<< Updated upstream
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './profile.css';
+=======
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import './modern-pages.css';
+>>>>>>> Stashed changes
 
 /**
  * User Profile page — Extended Personal Details, Activity Summary,
  * Virtual ID Card, and Change Password.
  */
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, logout, changePassword } = useAuth();
+
+  const profileRouteByRole = {
+    ADMIN: '/admin/profile',
+    TECHNICIAN: '/technician/profile',
+    USER: '/profile',
+  };
 
   const [form, setForm] = useState({ current: '', newPass: '', confirm: '' });
   const [pwStatus, setPwStatus] = useState({ msg: '', type: '' });
@@ -49,6 +63,11 @@ export default function Profile() {
       await changePassword(form.current, form.newPass);
       setPwStatus({ msg: '✅ Password changed successfully!', type: 'success' });
       setForm({ current: '', newPass: '', confirm: '' });
+
+      // Keep each role on its own profile route after password update.
+      setTimeout(() => {
+        navigate(profileRouteByRole[user?.role] ?? '/profile');
+      }, 1500);
     } catch (err) {
       setPwStatus({ msg: err.message || 'Failed to change password.', type: 'error' });
     } finally {
@@ -71,12 +90,13 @@ export default function Profile() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="page-content animate-in">
+    <div className="page-content animate-in user-modern-page user-modern-profile">
       <div className="content-header">
         <h1>My Profile</h1>
         <p>Manage your account settings and personal information.</p>
       </div>
 
+<<<<<<< Updated upstream
       {/* ── Activity Summary Cards ─────────────────────────────── */}
       <div className="profile-activity-grid">
         {activityStats.map((stat) => (
@@ -145,6 +165,21 @@ export default function Profile() {
                   }}
                 />
               ))}
+=======
+      <div className="modern-profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 900 }}>
+
+        {/* ── Profile Info Card ── */}
+        <div className="glass-card modern-panel" style={{ padding: 28 }}>
+          <h3 style={{ marginBottom: 20 }}>Account Information</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+            {user?.picture
+              ? <img src={user.picture} alt="" className="user-avatar" style={{ width: 64, height: 64 }} />
+              : <div className="user-avatar-placeholder" style={{ width: 64, height: 64, fontSize: '1.6rem' }}>{user?.name?.[0]}</div>
+            }
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 4 }}>{user?.name}</div>
+              <span className={`role-badge ${user?.role}`}>{user?.role}</span>
+>>>>>>> Stashed changes
             </div>
           </div>
 
@@ -358,6 +393,87 @@ export default function Profile() {
             🚪 Sign Out
           </button>
         </div>
+<<<<<<< Updated upstream
+=======
+
+        {/* ── Change Password Card ── */}
+        <div className="glass-card modern-panel" style={{ padding: 28 }}>
+          <h3 style={{ marginBottom: 6 }}>Change Password</h3>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+            {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN')
+              ? 'Update your staff account password. Changes apply immediately.'
+              : 'Update your account password.'}
+          </p>
+
+          {pwStatus.msg && (
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: 10,
+              marginBottom: 16,
+              fontSize: '0.82rem',
+              fontWeight: 500,
+              background: pwStatus.type === 'success' ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
+              border: `1px solid ${pwStatus.type === 'success' ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}`,
+              color: pwStatus.type === 'success' ? '#34D399' : '#F87171',
+            }}>
+              {pwStatus.msg}
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="auth-form" style={{ gap: 14 }}>
+            <div className="form-group">
+              <label className="form-label">Current Password</label>
+              <div className="form-input-wrapper">
+                <span className="form-input-icon">🔒</span>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Enter current password"
+                  value={form.current}
+                  onChange={e => setForm(p => ({ ...p, current: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <div className="form-input-wrapper">
+                <span className="form-input-icon">🔑</span>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Min 6 characters"
+                  value={form.newPass}
+                  onChange={e => setForm(p => ({ ...p, newPass: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm New Password</label>
+              <div className="form-input-wrapper">
+                <span className="form-input-icon">✅</span>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Re-enter new password"
+                  value={form.confirm}
+                  onChange={e => setForm(p => ({ ...p, confirm: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="btn-primary btn-glow"
+              disabled={saving || !form.current || !form.newPass || !form.confirm}
+            >
+              {saving ? '⏳ Saving…' : '🔐 Update Password'}
+            </button>
+          </form>
+        </div>
+
+>>>>>>> Stashed changes
       </div>
     </div>
   );

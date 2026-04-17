@@ -8,6 +8,9 @@ import Register                   from './pages/Register';
 import OAuthCallback              from './pages/OAuthCallback';
 import Homepage                   from './pages/Homepage';
 
+// Public pages
+import Homepage                   from './pages/Homepage';
+
 // Layouts
 import UserLayout                 from './layouts/UserLayout';
 import AdminLayout                from './layouts/AdminLayout';
@@ -35,14 +38,14 @@ import AssignedTickets            from './pages/technician/AssignedTickets';
 import UnassignedTickets          from './pages/technician/UnassignedTickets';
 import TechNotifications          from './pages/technician/Notifications';
 
-function RootRedirect() {
+function PublicEntry() {
   const { user, loading } = useAuth();
   if (loading) return (
     <div className="spinner-overlay">
       <div className="spinner" />
     </div>
   );
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Homepage />;
   const routes = {
     ADMIN:      '/admin/dashboard',
     TECHNICIAN: '/technician/dashboard',
@@ -56,17 +59,23 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+<<<<<<< Updated upstream
           {/* ── Public ── */}
           <Route path="/"              element={<Homepage />} />
           <Route path="/home"          element={<Homepage />} />
           <Route path="/app"           element={<RootRedirect />} />
+=======
+          {/* ── Public Routes ── */}
+          <Route path="/"              element={<PublicEntry />} />
+          <Route path="/home"          element={<Homepage />} />
+>>>>>>> Stashed changes
           <Route path="/login"         element={<Login />} />
           <Route path="/register"      element={<Register />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
 
           {/* ── USER (Student) — Navbar Layout ── */}
           <Route element={
-            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'TECHNICIAN']}>
+            <ProtectedRoute allowedRoles={['USER']}>
               <UserLayout />
             </ProtectedRoute>
           }>
@@ -90,6 +99,7 @@ export default function App() {
             <Route path="/admin/tickets"       element={<ManageTickets />} />
             <Route path="/admin/tickets/:id"  element={<AdminTicketDetail />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/profile"       element={<Profile />} />
           </Route>
 
           {/* ── TECHNICIAN — Sidebar Dashboard ── */}
@@ -103,6 +113,7 @@ export default function App() {
             <Route path="/technician/unassigned"     element={<UnassignedTickets />} />
             <Route path="/technician/tickets/:id"   element={<TicketDetailPage />} />
             <Route path="/technician/notifications"  element={<TechNotifications />} />
+            <Route path="/technician/profile"        element={<Profile />} />
           </Route>
 
           {/* ── Catch-all ── */}

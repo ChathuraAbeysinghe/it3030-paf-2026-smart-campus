@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+<<<<<<< Updated upstream
 import { useNavigate } from 'react-router-dom';
 import { ticketService } from '../../services/ticketService';
 import { categoryLabels, statusLabels, ticketCategories, ticketPriorities } from '../../mock/tickets';
@@ -10,6 +11,14 @@ import ToastContainer, { toast } from '../../components/tickets/ToastNotificatio
 
 const STATUS_TABS = ['ALL', 'OPEN', 'IN_PROGRESS', 'WAITING_USER_CONFIRMATION', 'ON_HOLD', 'RESOLVED', 'CLOSED'];
 const TAB_LABELS = { ALL: 'All', OPEN: 'Open', IN_PROGRESS: 'In Progress', WAITING_USER_CONFIRMATION: 'Awaiting', ON_HOLD: 'On Hold', RESOLVED: 'Resolved', CLOSED: 'Closed' };
+=======
+import { ticketService } from '../../services/api';
+import { ticketCategories, ticketPriorities } from '../../mock/tickets';
+import StatusBadge from '../../components/StatusBadge';
+import SLATimer from '../../components/SLATimer';
+import GlassModal from '../../components/GlassModal';
+import './modern-pages.css';
+>>>>>>> Stashed changes
 
 export default function MyTickets() {
   const navigate = useNavigate();
@@ -60,11 +69,16 @@ export default function MyTickets() {
   }
 
   return (
+<<<<<<< Updated upstream
     <div className="animate-in">
       <ToastContainer />
 
       {/* Header */}
       <div className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+=======
+    <div className="page-content animate-in user-modern-page user-modern-tickets">
+      <div className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+>>>>>>> Stashed changes
         <div>
           <h1>My Tickets</h1>
           <p>Track and manage your maintenance requests.</p>
@@ -74,6 +88,7 @@ export default function MyTickets() {
         </button>
       </div>
 
+<<<<<<< Updated upstream
       {/* Filter Tabs */}
       <div className="ticket-tabs">
         {STATUS_TABS.map(tab => (
@@ -87,6 +102,28 @@ export default function MyTickets() {
               {tab === 'ALL' ? tickets.length : tickets.filter(t => t.status === tab).length}
             </span>
           </button>
+=======
+      <div className="ticket-list">
+        {tickets.map(t => (
+          <div key={t.id} className="ticket-card glass-card modern-panel modern-ticket-card">
+            <div className="ticket-card-header">
+              <h3>{t.title}</h3>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <StatusBadge status={t.priority} />
+                <StatusBadge status={t.status} />
+              </div>
+            </div>
+            <p className="ticket-desc">{t.description}</p>
+            <div className="ticket-card-footer">
+              <span>📍 {t.location}</span>
+              <span>📂 {t.category}</span>
+              {t.assignedToName && <span>🔧 {t.assignedToName}</span>}
+              {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && (
+                <SLATimer deadline={t.slaDeadline} />
+              )}
+            </div>
+          </div>
+>>>>>>> Stashed changes
         ))}
       </div>
 

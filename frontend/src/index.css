@@ -713,6 +713,10 @@ select.form-input option {
   background: var(--bg);
 }
 
+.user-layout--dashboard {
+  background: #F4F6FA;
+}
+
 .user-navbar {
   display: flex;
   align-items: center;
@@ -793,6 +797,10 @@ select.form-input option {
   padding: 32px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.user-main--dashboard {
+  max-width: 1240px;
 }
 
 /* ── Notification Bell ─────────────────────────────────── */

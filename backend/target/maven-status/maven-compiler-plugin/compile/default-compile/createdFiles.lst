@@ -60,7 +60,11 @@ com\smartcampus\backend\repository\ResourceRepository.class
 com\smartcampus\backend\config\ResourceMongoConvertersConfig$StringToResourceTypeConverter.class
 com\smartcampus\backend\controller\BookingController.class
 com\smartcampus\backend\dto\BookingRequest.class
+<<<<<<< Updated upstream
 com\smartcampus\backend\model\enums\EventType.class
+=======
+com\smartcampus\backend\dto\ChangePasswordRequest.class
+>>>>>>> Stashed changes
 com\smartcampus\backend\model\User.class
 com\smartcampus\backend\model\Role.class
 com\smartcampus\backend\security\OAuth2AuthenticationSuccessHandler.class

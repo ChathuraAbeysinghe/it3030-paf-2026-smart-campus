@@ -17,7 +17,11 @@ function timeAgo(dateStr) {
   return `${Math.floor(hours / 24)}d`;
 }
 
+<<<<<<< Updated upstream
 function NotificationBadge({ role = 'USER' }) {
+=======
+export default function NotificationBadge({ role = 'USER' }) {
+>>>>>>> Stashed changes
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const wrapRef = useRef(null);
@@ -103,5 +107,8 @@ function BellIcon() {
     </svg>
   );
 }
+<<<<<<< Updated upstream
 
 export default NotificationBadge;
+=======
+>>>>>>> Stashed changes
