@@ -5,6 +5,7 @@ import com.smartcampus.backend.dto.RegisterRequest;
 import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.repository.UserRepository;
+import com.smartcampus.backend.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -29,6 +30,7 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Value("${app.admin-emails:}")
     private String adminEmailsConfig;
@@ -131,12 +133,15 @@ public class AuthController {
         session.setAttribute(org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
             org.springframework.security.core.context.SecurityContextHolder.getContext());
 
+        String token = jwtService.generateToken(user.getEmail());
+
         return ResponseEntity.ok(Map.of(
                 "id",      user.getId(),
                 "name",    user.getName(),
                 "email",   user.getEmail(),
                 "picture", user.getPicture() != null ? user.getPicture() : "",
-                "role",    user.getRole().name()
+            "role",    user.getRole().name(),
+            "token",   token
         ));
     }
 
