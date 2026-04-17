@@ -68,7 +68,7 @@ export default function TicketDetailPage() {
         ticketService.getById(id),
         commentService.getComments(id),
         timelineService.getTimeline(id),
-        userService.getTechnicians(),
+        userService.getAssignableStaff(),
       ]);
       setTicket(t);
       setComments(c);
@@ -128,7 +128,7 @@ export default function TicketDetailPage() {
     setActionLoading(true);
     try {
       await ticketService.assign(id, techId);
-      toast.success('Technician assigned');
+      toast.success('Staff assigned');
       await loadAll();
     } catch { toast.error('Failed to assign'); }
     setActionLoading(false);
@@ -400,17 +400,17 @@ export default function TicketDetailPage() {
             </div>
           )}
 
-          {/* Assign Technician (Admin) */}
+          {/* Assign Staff (Admin) */}
           {isAdmin && !ticket.assignedTechnician && ticket.status !== 'CLOSED' && ticket.status !== 'REJECTED' && (
             <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Assign Technician</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Assign Staff</div>
               <div className="flex flex-col gap-2">
                 {technicians.filter(t => t.active !== false).map(tech => (
                   <button key={tech.id} className="w-full flex justify-between items-center text-left border border-slate-200 bg-white hover:bg-slate-50 rounded-lg p-3 transition duration-150 cursor-pointer" onClick={() => handleAssign(tech.id)}
                     disabled={actionLoading}>
                     <div className="flex flex-col">
                       <strong className="text-slate-900 text-sm">{tech.name}</strong>
-                      <span className="text-slate-500 text-xs">{tech.specialization || 'Support Technician'}</span>
+                      <span className="text-slate-500 text-xs">{tech.role === 'ADMIN' ? 'Admin' : (tech.specialization || 'Support Technician')}</span>
                     </div>
                     <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">{tech.assignedTickets || 0} tickets</span>
                   </button>

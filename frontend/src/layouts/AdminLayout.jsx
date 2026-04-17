@@ -19,7 +19,7 @@ export default function AdminLayout() {
       <nav className="sidebar">
         <div className="sidebar-logo">
           <img src="/sliit-campus-logo-.png" alt="SLIIT" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span style={{ color: '#F87171' }}>Admin Panel</span>
+          <span className="font-bold text-slate-800">Admin Panel</span>
         </div>
 
         {NAV_ITEMS.map(item => (

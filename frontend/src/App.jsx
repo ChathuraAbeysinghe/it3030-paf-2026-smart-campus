@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth }  from './context/AuthContext';
+import { useAuth }  from './context/AuthContext';
 import ProtectedRoute             from './components/ProtectedRoute';
 import LoadingSpinner            from './components/LoadingSpinner';
 
@@ -47,13 +47,12 @@ function PublicEntry() {
 }
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   if (loading) return <LoadingSpinner />;
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <BrowserRouter>
+      <Routes>
           {/* ── Public Routes ── */}
           <Route path="/"              element={<PublicEntry />} />
           <Route path="/home"          element={<Homepage />} />
@@ -104,8 +103,7 @@ export default function App() {
 
           {/* ── Catch-all ── */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Routes>
+    </BrowserRouter>
   );
 }

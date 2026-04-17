@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ticketService } from '../../services/ticketService';
 import { ticketCategories, ticketPriorities } from '../../mock/tickets';
 import SLATimer from '../../components/SLATimer';
 import ToastContainer, { toast } from '../../components/tickets/ToastNotification';
-import { Plus, MapPin, Folder, ChevronDown, ImagePlus, AlertTriangle, X, Ticket, Search, Clock3 } from 'lucide-react';
+import { Plus, MapPin, Folder, ChevronDown, ImagePlus, AlertTriangle, X, Ticket, Search, Clock3, Type, FileText, Hash, Wrench, Monitor, Wind, Lightbulb, Shield, Package, Wifi, Droplets, ClipboardList, CheckCircle2 } from 'lucide-react';
 
 const TABS = ['ALL', 'OPEN', 'IN_PROGRESS', 'WAITING_USER_CONFIRMATION', 'RESOLVED', 'CLOSED', 'REJECTED'];
 
@@ -17,6 +17,32 @@ const STATUS_LABELS = {
   CLOSED: 'Closed',
   REJECTED: 'Rejected',
 };
+
+const PRIORITY_SLA_LABELS = {
+  LOW: 'Official Response within 24 Business Hours.',
+  MEDIUM: 'Official Response within 12 Business Hours.',
+  HIGH: 'Official Response within 4 Business Hours.',
+  CRITICAL: 'Official Response within 2 Business Hours.',
+};
+
+const PRIORITY_THEME = {
+  LOW: 'border-slate-300 text-slate-700 bg-slate-100/80',
+  MEDIUM: 'border-amber-300 text-amber-800 bg-amber-100/80',
+  HIGH: 'border-orange-300 text-orange-800 bg-orange-100/80',
+  CRITICAL: 'border-rose-300 text-rose-800 bg-rose-100/80',
+};
+
+function getCategoryVisual(category) {
+  if (category === 'IT_NETWORK' || category === 'AV_EQUIPMENT') return { Icon: Monitor, tint: 'text-cyan-600', bg: 'bg-cyan-50 border-cyan-200' };
+  if (category === 'HVAC') return { Icon: Wind, tint: 'text-sky-600', bg: 'bg-sky-50 border-sky-200' };
+  if (category === 'ELECTRICAL') return { Icon: Lightbulb, tint: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' };
+  if (category === 'SECURITY') return { Icon: Shield, tint: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
+  if (category === 'SUPPLIES') return { Icon: Package, tint: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' };
+  if (category === 'PLUMBING') return { Icon: Droplets, tint: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' };
+  if (category === 'WIFI') return { Icon: Wifi, tint: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' };
+  if (category === 'GENERAL') return { Icon: ClipboardList, tint: 'text-slate-600', bg: 'bg-slate-100 border-slate-200' };
+  return { Icon: Wrench, tint: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
+}
 
 export default function MyTickets() {
   const navigate = useNavigate();
@@ -41,11 +67,17 @@ export default function MyTickets() {
   const [sortBy, setSortBy] = useState('NEWEST');
   const [createErrors, setCreateErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
+  const [activeCreateSection, setActiveCreateSection] = useState('problem');
+  const [activeEditSection, setActiveEditSection] = useState('problem');
+  const [createSuccess, setCreateSuccess] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const createTitleRef = useRef(null);
+  const editTitleRef = useRef(null);
 
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: 'MAINTENANCE',
+    category: ticketCategories[0] || 'GENERAL',
     priority: 'MEDIUM',
     location: '',
     tags: '',
@@ -83,6 +115,22 @@ export default function MyTickets() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [showCreate, showEdit, showCancel, creating, updating, cancellingId]);
 
+  useEffect(() => {
+    if (!showCreate) return;
+    setActiveCreateSection('problem');
+    setCreateSuccess(false);
+    const timerId = window.setTimeout(() => createTitleRef.current?.focus(), 120);
+    return () => window.clearTimeout(timerId);
+  }, [showCreate]);
+
+  useEffect(() => {
+    if (!showEdit) return;
+    setActiveEditSection('problem');
+    setEditSuccess(false);
+    const timerId = window.setTimeout(() => editTitleRef.current?.focus(), 120);
+    return () => window.clearTimeout(timerId);
+  }, [showEdit]);
+
   async function loadTickets() {
     setLoading(true);
     try {
@@ -100,17 +148,20 @@ export default function MyTickets() {
     if (Object.keys(errors).length > 0) return;
 
     setCreating(true);
+    setCreateSuccess(false);
     try {
       const tags = form.tags
         ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
         : [];
       await ticketService.create({ ...form, tags });
+      setCreateSuccess(true);
       toast.success('Ticket created successfully');
+      await new Promise((resolve) => window.setTimeout(resolve, 380));
       setShowCreate(false);
       setForm({
         title: '',
         description: '',
-        category: 'MAINTENANCE',
+        category: ticketCategories[0] || 'GENERAL',
         priority: 'MEDIUM',
         location: '',
         tags: '',
@@ -120,6 +171,7 @@ export default function MyTickets() {
     } catch {
       toast.error('Failed to create ticket');
     } finally {
+      setCreateSuccess(false);
       setCreating(false);
     }
   }
@@ -127,6 +179,8 @@ export default function MyTickets() {
   function openEdit(ticket) {
     setEditingTicketId(ticket.id);
     setEditErrors({});
+    setActiveEditSection('problem');
+    setEditSuccess(false);
     setEditForm({
       title: ticket.title || '',
       description: ticket.description || '',
@@ -145,6 +199,7 @@ export default function MyTickets() {
     if (Object.keys(errors).length > 0) return;
 
     setUpdating(true);
+    setEditSuccess(false);
     try {
       const tags = editForm.tags
         ? editForm.tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -157,7 +212,9 @@ export default function MyTickets() {
         location: editForm.location,
         tags,
       });
+      setEditSuccess(true);
       toast.success('Ticket updated successfully');
+      await new Promise((resolve) => window.setTimeout(resolve, 320));
       setShowEdit(false);
       setEditingTicketId('');
       setEditErrors({});
@@ -165,6 +222,7 @@ export default function MyTickets() {
     } catch {
       toast.error('Failed to update ticket');
     } finally {
+      setEditSuccess(false);
       setUpdating(false);
     }
   }
@@ -302,6 +360,16 @@ export default function MyTickets() {
     return errors;
   };
 
+  const createSectionClass = (section) => {
+    const dimmed = activeCreateSection && activeCreateSection !== section;
+    return `rounded-2xl border transition-all duration-200 p-4 ${dimmed ? 'border-slate-200/70 opacity-50 blur-[0.2px]' : 'border-indigo-200 bg-white/80 shadow-sm'}`;
+  };
+
+  const editSectionClass = (section) => {
+    const dimmed = activeEditSection && activeEditSection !== section;
+    return `rounded-2xl border transition-all duration-200 p-4 ${dimmed ? 'border-slate-200/70 opacity-50 blur-[0.2px]' : 'border-indigo-200 bg-white/80 shadow-sm'}`;
+  };
+
   const getEmptyStateContent = () => {
     if (searchQuery.trim()) {
       return {
@@ -426,12 +494,12 @@ export default function MyTickets() {
               key={ticket.id} 
               className={`rounded-2xl border border-slate-200 bg-white p-4 transition duration-150 relative flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4 items-start hover:shadow-md border-l-4 ${isOverdue(ticket.slaDeadline) && (ticket.status === 'OPEN' || ticket.status === 'IN_PROGRESS') ? 'border-l-red-500' : getRowAccentClass(ticket.status)}`}
             >
-              <div className="min-w-[58px] text-center bg-slate-50 rounded-xl px-2 py-2.5 border border-slate-100">
+              <div className="min-w-14.5 text-center bg-slate-50 rounded-xl px-2 py-2.5 border border-slate-100">
                 <div className="text-2xl font-bold text-slate-800 leading-none">{day}</div>
                 <div className="text-[11px] mt-1 uppercase tracking-wide text-slate-500 font-semibold">{month}</div>
               </div>
 
-              <div className="flex-1 min-w-[220px]">
+              <div className="flex-1 min-w-55">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -466,7 +534,7 @@ export default function MyTickets() {
                 )}
               </div>
 
-              <div className="sm:min-w-[170px] w-full sm:w-auto sm:self-stretch flex flex-col sm:items-end justify-between gap-3 border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4">
+              <div className="sm:min-w-42.5 w-full sm:w-auto sm:self-stretch flex flex-col sm:items-end justify-between gap-3 border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4">
                 {ticket.status === 'OPEN' && (
                   <div className="flex gap-2 sm:justify-end" onClick={(e) => e.stopPropagation()}>
                     <button className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-lg transition duration-150 font-medium cursor-pointer" onClick={() => openEdit(ticket)}>Edit</button>
@@ -498,7 +566,7 @@ export default function MyTickets() {
           role="dialog"
           aria-modal="true"
           aria-label="Create ticket panel"
-          className={`relative w-full sm:w-[30rem] h-full bg-white border-l border-slate-200 flex flex-col transition-transform duration-300 ${showCreate ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`relative w-full sm:w-140 h-full border-l border-white/40 bg-linear-to-b from-white/85 to-slate-100/85 backdrop-blur-xl flex flex-col transition-transform duration-300 ${showCreate ? 'translate-x-0' : 'translate-x-full'}`}
         >
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 className="font-semibold text-slate-900 text-lg">Report an Issue</h2>
@@ -508,109 +576,189 @@ export default function MyTickets() {
           </div>
           
           <div className="p-6 space-y-5 overflow-y-auto flex-1">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Title</label>
-              <input 
-                className={`rounded-xl border px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${createErrors.title ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                placeholder="Brief summary of the issue"
-                value={form.title}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setForm((p) => ({ ...p, title: value }));
-                  if (createErrors.title) {
-                    setCreateErrors((prev) => ({ ...prev, title: undefined }));
-                  }
-                }}
-              />
-              {createErrors.title && <p className="mt-1 text-xs text-red-600">{createErrors.title}</p>}
+            <div className="wizard-progress">
+              {[
+                ['problem', 'Step 1: The Problem'],
+                ['classification', 'Step 2: Classification'],
+                ['logistics', 'Step 3: Logistics'],
+                ['review', 'Step 4: Review'],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`wizard-step ${activeCreateSection === id ? 'active' : ''}`}
+                  onClick={() => setActiveCreateSection(id)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
-              <textarea 
-                className={`rounded-xl border px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition resize-none ${createErrors.description ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                rows={4}
-                placeholder="Describe the issue in detail..."
-                value={form.description}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setForm((p) => ({ ...p, description: value }));
-                  if (createErrors.description) {
-                    setCreateErrors((prev) => ({ ...prev, description: undefined }));
-                  }
-                }}
-              />
-              {createErrors.description && <p className="mt-1 text-xs text-red-600">{createErrors.description}</p>}
-            </div>
+            <section className={createSectionClass('problem')} onFocus={() => setActiveCreateSection('problem')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 1: The Problem</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Title</label>
+                  <div className="relative">
+                    <Type className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      ref={createTitleRef}
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${createErrors.title ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      placeholder="Brief summary of the issue"
+                      value={form.title}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setForm((p) => ({ ...p, title: value }));
+                        if (createErrors.title) {
+                          setCreateErrors((prev) => ({ ...prev, title: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {createErrors.title && <p className="mt-1 text-xs text-red-600">{createErrors.title}</p>}
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Category</label>
-                <div className="relative">
-                  <select 
-                    className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm w-full bg-white appearance-none outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-                    value={form.category}
-                    onChange={(e) => setForm(p => ({...p, category: e.target.value}))}
-                  >
-                    {ticketCategories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3 text-slate-400 pointer-events-none" size={16} />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Detailed Description</label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <textarea 
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition resize-none ${createErrors.description ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      rows={5}
+                      maxLength={500}
+                      placeholder="Describe the issue in detail..."
+                      value={form.description}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setForm((p) => ({ ...p, description: value }));
+                        if (createErrors.description) {
+                          setCreateErrors((prev) => ({ ...prev, description: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1 flex justify-between text-xs">
+                    {createErrors.description ? <p className="text-red-600">{createErrors.description}</p> : <span className="text-slate-400">Add enough context for faster resolution</span>}
+                    <span className={`${form.description.length > 450 ? 'text-rose-600 font-semibold' : 'text-slate-500'}`}>{form.description.length}/500</span>
+                  </div>
                 </div>
               </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
-                <div className="relative">
-                  <select 
-                    className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm w-full bg-white appearance-none outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-                    value={form.priority}
-                    onChange={(e) => setForm(p => ({...p, priority: e.target.value}))}
-                  >
-                    {ticketPriorities.map((p) => <option key={p} value={p}>{getPriorityOptionLabel(p)}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3 text-slate-400 pointer-events-none" size={16} />
+            </section>
+
+            <section className={createSectionClass('classification')} onFocus={() => setActiveCreateSection('classification')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 2: Classification</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                  <div className="category-wizard-grid">
+                    {ticketCategories.map((category) => {
+                      const visual = getCategoryVisual(category);
+                      const selected = form.category === category;
+                      const label = category.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          className={`category-wizard-card ${selected ? 'selected' : ''} ${selected ? visual.bg : ''}`}
+                          onClick={() => {
+                            setActiveCreateSection('classification');
+                            setForm((p) => ({ ...p, category }));
+                          }}
+                        >
+                          <visual.Icon size={22} className={`mx-auto mb-2 ${selected ? visual.tint : 'text-slate-500'}`} />
+                          <div className="cat-label">{label}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
+                  <div className="priority-wizard-selector">
+                    {ticketPriorities.map((priority) => {
+                      const selected = form.priority === priority;
+                      return (
+                        <button
+                          key={priority}
+                          type="button"
+                          className={`priority-wizard-option ${selected ? `selected-${priority.toLowerCase()}` : ''}`}
+                          onClick={() => {
+                            setActiveCreateSection('classification');
+                            setForm((p) => ({ ...p, priority }));
+                          }}
+                        >
+                          {getPriorityOptionLabel(priority)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className={`rounded-xl border px-3 py-2 text-xs font-semibold ${PRIORITY_THEME[form.priority] || PRIORITY_THEME.MEDIUM}`}>
+                  {PRIORITY_SLA_LABELS[form.priority]}
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Location</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
-                <input 
-                  className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${createErrors.location ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                  placeholder="e.g. Block A, Floor 2"
-                  value={form.location}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setForm((p) => ({ ...p, location: value }));
-                    if (createErrors.location) {
-                      setCreateErrors((prev) => ({ ...prev, location: undefined }));
-                    }
-                  }}
-                />
+            <section className={createSectionClass('logistics')} onFocus={() => setActiveCreateSection('logistics')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 3: Logistics</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Location</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${createErrors.location ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      placeholder="e.g. Block A, Floor 2"
+                      value={form.location}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setForm((p) => ({ ...p, location: value }));
+                        if (createErrors.location) {
+                          setCreateErrors((prev) => ({ ...prev, location: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {createErrors.location && <p className="mt-1 text-xs text-red-600">{createErrors.location}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tags</label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      className="rounded-xl border border-slate-200 bg-white/90 pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                      placeholder="projector, urgent, block-a"
+                      value={form.tags}
+                      onChange={(e) => setForm(p => ({...p, tags: e.target.value}))}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">Comma-separated tags improve routing and search</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Attachments (Mock)</label>
+                  <div className="border border-dashed border-slate-300 rounded-2xl bg-white/60 backdrop-blur-sm p-6 text-center cursor-pointer hover:bg-white/80 transition">
+                    <ImagePlus className="mx-auto text-slate-400 mb-2" size={30} />
+                    <p className="text-slate-600 text-sm">Drag images here or click to browse</p>
+                    <p className="text-slate-500 text-xs mt-1">Max 3 images · JPG, PNG · Up to 5MB each</p>
+                  </div>
+                </div>
               </div>
-              {createErrors.location && <p className="mt-1 text-xs text-red-600">{createErrors.location}</p>}
-            </div>
+            </section>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tags</label>
-              <input 
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                placeholder="projector, urgent, block-a (comma separated)"
-                value={form.tags}
-                onChange={(e) => setForm(p => ({...p, tags: e.target.value}))}
-              />
-              <p className="text-xs text-slate-400 mt-1">Helps with ticket routing and search</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Attachments (Mock)</label>
-              <div className="border border-dashed border-slate-300 rounded-2xl bg-slate-50 p-6 text-center cursor-pointer hover:bg-slate-100 transition">
-                <ImagePlus className="mx-auto text-slate-300 mb-2" size={32} />
-                <p className="text-slate-500 text-sm">Drag images here or click to browse</p>
-                <p className="text-slate-400 text-xs mt-1">Max 3 images · JPG, PNG · Up to 5MB each</p>
+            <section className={createSectionClass('review')} onFocus={() => setActiveCreateSection('review')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 4: Review Before Submit</h3>
+              <div className="rounded-xl border border-slate-200 bg-white/80 p-3 space-y-2 text-sm">
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Title</span><span className="text-slate-800 font-medium text-right">{form.title || 'Not provided'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Category</span><span className="text-slate-800 font-medium text-right">{form.category.replace(/_/g, ' ')}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Priority</span><span className={`rounded-full px-2 py-0.5 border text-xs ${PRIORITY_THEME[form.priority] || PRIORITY_THEME.MEDIUM}`}>{getPriorityOptionLabel(form.priority)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Location</span><span className="text-slate-800 font-medium text-right">{form.location || 'Not provided'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Description</span><span className="text-slate-800 font-medium text-right">{form.description.trim() ? `${form.description.length} chars` : 'Not provided'}</span></div>
               </div>
-            </div>
+            </section>
           </div>
           
           <div className="p-6 border-t border-slate-100 flex gap-3 bg-white">
@@ -618,7 +766,11 @@ export default function MyTickets() {
               Cancel
             </button>
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg flex-1 py-2.5 transition flex justify-center items-center cursor-pointer" onClick={handleCreate} disabled={creating}>
-              {creating ? <span className="animate-pulse">Creating...</span> : 'Create Ticket'}
+              {creating ? (
+                createSuccess
+                  ? <span className="inline-flex items-center gap-1"><CheckCircle2 size={16} /> Created</span>
+                  : <span className="animate-pulse">Creating...</span>
+              ) : 'Create Ticket'}
             </button>
           </div>
         </div>
@@ -631,7 +783,7 @@ export default function MyTickets() {
           role="dialog"
           aria-modal="true"
           aria-label="Edit ticket panel"
-          className={`relative w-full sm:w-[30rem] h-full bg-white border-l border-slate-200 flex flex-col transition-transform duration-300 ${showEdit ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`relative w-full sm:w-120 h-full border-l border-white/40 bg-linear-to-b from-white/85 to-slate-100/85 backdrop-blur-xl flex flex-col transition-transform duration-300 ${showEdit ? 'translate-x-0' : 'translate-x-full'}`}
         >
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 className="font-semibold text-slate-900 text-lg">Edit Ticket</h2>
@@ -641,82 +793,143 @@ export default function MyTickets() {
           </div>
           
           <div className="p-6 space-y-5 overflow-y-auto flex-1">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Title</label>
-              <input 
-                className={`rounded-xl border px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${editErrors.title ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                value={editForm.title}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setEditForm((p) => ({ ...p, title: value }));
-                  if (editErrors.title) {
-                    setEditErrors((prev) => ({ ...prev, title: undefined }));
-                  }
-                }}
-              />
-              {editErrors.title && <p className="mt-1 text-xs text-red-600">{editErrors.title}</p>}
+            <div className="wizard-progress">
+              {[
+                ['problem', 'Step 1: Problem'],
+                ['details', 'Step 2: Priority & Logistics'],
+                ['review', 'Step 3: Review'],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`wizard-step ${activeEditSection === id ? 'active' : ''}`}
+                  onClick={() => setActiveEditSection(id)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
-              <textarea 
-                className={`rounded-xl border px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition resize-none ${editErrors.description ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                rows={4}
-                value={editForm.description}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setEditForm((p) => ({ ...p, description: value }));
-                  if (editErrors.description) {
-                    setEditErrors((prev) => ({ ...prev, description: undefined }));
-                  }
-                }}
-              />
-              {editErrors.description && <p className="mt-1 text-xs text-red-600">{editErrors.description}</p>}
-            </div>
+            <section className={editSectionClass('problem')} onFocus={() => setActiveEditSection('problem')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 1: The Problem</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Title</label>
+                  <div className="relative">
+                    <Type className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      ref={editTitleRef}
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${editErrors.title ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      value={editForm.title}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditForm((p) => ({ ...p, title: value }));
+                        if (editErrors.title) {
+                          setEditErrors((prev) => ({ ...prev, title: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {editErrors.title && <p className="mt-1 text-xs text-red-600">{editErrors.title}</p>}
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative col-span-2">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
-                <div className="relative">
-                  <select 
-                    className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm w-full bg-white appearance-none outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-                    value={editForm.priority}
-                    onChange={(e) => setEditForm(p => ({...p, priority: e.target.value}))}
-                  >
-                    {ticketPriorities.map((p) => <option key={p} value={p}>{getPriorityOptionLabel(p)}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3 text-slate-400 pointer-events-none" size={16} />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <textarea 
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition resize-none ${editErrors.description ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      rows={5}
+                      maxLength={500}
+                      value={editForm.description}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditForm((p) => ({ ...p, description: value }));
+                        if (editErrors.description) {
+                          setEditErrors((prev) => ({ ...prev, description: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1 flex justify-between text-xs">
+                    {editErrors.description ? <p className="text-red-600">{editErrors.description}</p> : <span className="text-slate-400">Update issue context for clarity</span>}
+                    <span className={`${editForm.description.length > 450 ? 'text-rose-600 font-semibold' : 'text-slate-500'}`}>{editForm.description.length}/500</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Location</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
-                <input 
-                  className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${editErrors.location ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
-                  value={editForm.location}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditForm((p) => ({ ...p, location: value }));
-                    if (editErrors.location) {
-                      setEditErrors((prev) => ({ ...prev, location: undefined }));
-                    }
-                  }}
-                />
+            <section className={editSectionClass('details')} onFocus={() => setActiveEditSection('details')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 2: Priority & Logistics</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
+                  <div className="priority-wizard-selector">
+                    {ticketPriorities.map((priority) => {
+                      const selected = editForm.priority === priority;
+                      return (
+                        <button
+                          key={priority}
+                          type="button"
+                          className={`priority-wizard-option ${selected ? `selected-${priority.toLowerCase()}` : ''}`}
+                          onClick={() => {
+                            setActiveEditSection('details');
+                            setEditForm((p) => ({ ...p, priority }));
+                          }}
+                        >
+                          {getPriorityOptionLabel(priority)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className={`rounded-xl border px-3 py-2 text-xs font-semibold ${PRIORITY_THEME[editForm.priority] || PRIORITY_THEME.MEDIUM}`}>
+                  {PRIORITY_SLA_LABELS[editForm.priority]}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Location</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      className={`rounded-xl border pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${editErrors.location ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white/90'}`}
+                      value={editForm.location}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditForm((p) => ({ ...p, location: value }));
+                        if (editErrors.location) {
+                          setEditErrors((prev) => ({ ...prev, location: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {editErrors.location && <p className="mt-1 text-xs text-red-600">{editErrors.location}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tags</label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-3 text-slate-400" size={16} />
+                    <input 
+                      className="rounded-xl border border-slate-200 bg-white/90 pl-10 pr-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                      value={editForm.tags}
+                      onChange={(e) => setEditForm(p => ({...p, tags: e.target.value}))}
+                    />
+                  </div>
+                </div>
               </div>
-              {editErrors.location && <p className="mt-1 text-xs text-red-600">{editErrors.location}</p>}
-            </div>
+            </section>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tags</label>
-              <input 
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                value={editForm.tags}
-                onChange={(e) => setEditForm(p => ({...p, tags: e.target.value}))}
-              />
-            </div>
+            <section className={editSectionClass('review')} onFocus={() => setActiveEditSection('review')}>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Step 3: Review Updates</h3>
+              <div className="rounded-xl border border-slate-200 bg-white/80 p-3 space-y-2 text-sm">
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Title</span><span className="text-slate-800 font-medium text-right">{editForm.title || 'Not provided'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Priority</span><span className={`rounded-full px-2 py-0.5 border text-xs ${PRIORITY_THEME[editForm.priority] || PRIORITY_THEME.MEDIUM}`}>{getPriorityOptionLabel(editForm.priority)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Location</span><span className="text-slate-800 font-medium text-right">{editForm.location || 'Not provided'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-500">Description</span><span className="text-slate-800 font-medium text-right">{editForm.description.trim() ? `${editForm.description.length} chars` : 'Not provided'}</span></div>
+              </div>
+            </section>
           </div>
           
           <div className="p-6 border-t border-slate-100 flex gap-3 bg-white">
@@ -724,7 +937,11 @@ export default function MyTickets() {
               Cancel
             </button>
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg flex-1 py-2.5 transition flex justify-center items-center cursor-pointer" onClick={handleUpdate} disabled={updating}>
-              {updating ? <span className="animate-pulse">Saving...</span> : 'Save Changes'}
+              {updating ? (
+                editSuccess
+                  ? <span className="inline-flex items-center gap-1"><CheckCircle2 size={16} /> Saved</span>
+                  : <span className="animate-pulse">Saving...</span>
+              ) : 'Save Changes'}
             </button>
           </div>
         </div>

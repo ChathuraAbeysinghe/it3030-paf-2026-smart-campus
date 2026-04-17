@@ -4,11 +4,15 @@
  */
 import { api } from '../context/AuthContext';
 import { mockTickets, mockComments, mockTimeline } from '../mock/tickets';
-import { mockTechnicians } from '../mock/users';
+import { mockTechnicians, mockUsers } from '../mock/users';
 
 function getStoredUser() {
   try { return JSON.parse(localStorage.getItem('smartcampus_user') || 'null'); }
   catch { return null; }
+}
+
+function isLocalMockSession() {
+  return localStorage.getItem('smartcampus_auth_mode') === 'local';
 }
 
 // ── SLA helpers ──
@@ -58,6 +62,13 @@ export const ticketService = {
   },
 
   getAssigned: async (techId) => {
+    if (isLocalMockSession()) {
+      const user = getStoredUser();
+      const tid = techId || user?.id;
+      return mockTickets
+        .filter(t => t.assignedTechnician === tid)
+        .map(t => ({ ...t, slaStatus: computeSlaStatus(t) }));
+    }
     try { return (await api.get('/api/tickets/assigned')).data; }
     catch {
       const user = getStoredUser();
@@ -177,9 +188,9 @@ export const ticketService = {
     catch {
       const t = mockTickets.find(t => t.id === id);
       if (!t) return null;
-      const tech = mockTechnicians.find(tc => tc.id === techId);
+      const assignee = [...mockTechnicians, ...mockUsers].find(staff => staff.id === techId);
       t.assignedTechnician = techId;
-      t.assignedTechnicianName = tech?.name || techId;
+      t.assignedTechnicianName = assignee?.name || techId;
       if (t.status === 'OPEN') t.status = 'IN_PROGRESS';
       t.updatedAt = new Date().toISOString();
       return { ...t };
