@@ -6,15 +6,30 @@
  * ─────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../services/notificationService';
 
 const TYPE_ICON = {
   BOOKING: '📅',
   TICKET:  '🎫',
+  TICKET_CREATED: '🎫',
+  TICKET_ASSIGNED: '🎫',
+  STATUS_UPDATED: '🎫',
+  COMMENT_ADDED: '🎫',
+  DISPUTED: '🎫',
+  CLOSED: '🎫',
   SYSTEM:  '📢',
 };
 
+function ticketPathByRole(role, ticketId) {
+  if (!ticketId) return null;
+  if (role === 'ADMIN') return `/admin/tickets/${ticketId}?tab=chat`;
+  if (role === 'TECHNICIAN') return `/technician/tickets/${ticketId}?tab=conversation`;
+  return `/tickets/${ticketId}?tab=conversation`;
+}
+
 export default function NotificationBell({ role }) {
+  const navigate = useNavigate();
   const [open, setOpen]           = useState(false);
   const [notifications, setNotifications] = useState([]);
   const dropdownRef               = useRef(null);
@@ -26,7 +41,11 @@ export default function NotificationBell({ role }) {
     setNotifications(data);
   }, [role]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const timerId = window.setInterval(load, 30000);
+    return () => window.clearInterval(timerId);
+  }, [load]);
 
   /* ── Close on outside click ─────────────────────────────────── */
   useEffect(() => {
@@ -43,9 +62,15 @@ export default function NotificationBell({ role }) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   /* ── Actions ────────────────────────────────────────────────── */
-  const handleMarkRead = async (id) => {
-    await notificationService.markAsRead(id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const handleMarkRead = async (notification) => {
+    await notificationService.markAsRead(notification.id);
+    setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
+
+    const path = ticketPathByRole(role, notification.relatedTicketId);
+    if (path) {
+      setOpen(false);
+      navigate(path);
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -109,7 +134,7 @@ export default function NotificationBell({ role }) {
               <div
                 key={n.id}
                 className={`nb-item ${n.read ? '' : 'nb-item--unread'}`}
-                onClick={() => handleMarkRead(n.id)}
+                onClick={() => handleMarkRead(n)}
                 role="button"
                 tabIndex={0}
               >

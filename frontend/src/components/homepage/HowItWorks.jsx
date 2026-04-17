@@ -1,52 +1,21 @@
-<<<<<<< Updated upstream
-const STEPS = [
-  {
-    icon: '🔎',
-    title: 'Search or Report',
-    text: 'Find resources instantly or submit any campus issue in seconds.',
-  },
-  {
-    icon: '🤖',
-    title: 'We Match and Notify',
-    text: 'Smart routing sends your booking or issue to the right team quickly.',
-  },
-  {
-    icon: '✅',
-    title: 'Done',
-    text: 'Track approvals and updates until your request is completed.',
-  },
-];
-
-export default function HowItWorks() {
-  return (
-    <section id="bookings" className="hp-section hp-section--white">
-      <div className="hp-container">
-        <h2 className="hp-section-title hp-section-title--center">Get things done in 3 steps</h2>
-        <div className="hp-steps">
-          {STEPS.map((step, index) => (
-            <article className="hp-step" key={step.title}>
-              <div className="hp-step__icon-wrap">
-                <span className="hp-step__icon">{step.icon}</span>
-                <span className="hp-step__num">{index + 1}</span>
-=======
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 
 const STEPS = [
   {
     number: 1,
-    icon: '🔍',
+    icon: 'ðŸ”',
     title: 'Search or Report',
     text: 'Find the resource you need or report a maintenance issue in under a minute.',
   },
   {
     number: 2,
-    icon: '🤖',
+    icon: 'ðŸ¤–',
     title: 'We Match and Notify',
     text: 'Smart routing directs your request to the right team while notifications keep you updated.',
   },
   {
     number: 3,
-    icon: '✅',
+    icon: 'âœ…',
     title: 'Done',
     text: 'Get confirmation, check status, and move forward without waiting in queues.',
   },
@@ -111,7 +80,6 @@ export default function HowItWorks() {
               <div className="hp-step-card__icon" aria-hidden="true">{step.icon}</div>
               <div className="hp-step-card__badge" aria-label={`Step ${step.number}`}>
                 <AnimatedNumber value={step.number} start={startCount} />
->>>>>>> Stashed changes
               </div>
               <h3>{step.title}</h3>
               <p>{step.text}</p>

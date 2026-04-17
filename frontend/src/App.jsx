@@ -8,9 +8,6 @@ import Register                   from './pages/Register';
 import OAuthCallback              from './pages/OAuthCallback';
 import Homepage                   from './pages/Homepage';
 
-// Public pages
-import Homepage                   from './pages/Homepage';
-
 // Layouts
 import UserLayout                 from './layouts/UserLayout';
 import AdminLayout                from './layouts/AdminLayout';
@@ -21,6 +18,7 @@ import Home                       from './pages/user/Home';
 import Resources                  from './pages/user/Resources';
 import MyBookings                 from './pages/user/MyBookings';
 import MyTickets                  from './pages/user/MyTickets';
+import UserNotifications          from './pages/user/Notifications';
 import TicketDetailPage           from './pages/tickets/TicketDetailPage';
 import Profile                    from './pages/user/Profile';
 
@@ -59,16 +57,9 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-<<<<<<< Updated upstream
-          {/* ── Public ── */}
-          <Route path="/"              element={<Homepage />} />
-          <Route path="/home"          element={<Homepage />} />
-          <Route path="/app"           element={<RootRedirect />} />
-=======
           {/* ── Public Routes ── */}
           <Route path="/"              element={<PublicEntry />} />
           <Route path="/home"          element={<Homepage />} />
->>>>>>> Stashed changes
           <Route path="/login"         element={<Login />} />
           <Route path="/register"      element={<Register />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
@@ -83,6 +74,7 @@ export default function App() {
             <Route path="/resources"    element={<Resources />} />
             <Route path="/my-bookings"  element={<MyBookings />} />
             <Route path="/my-tickets"   element={<MyTickets />} />
+            <Route path="/notifications" element={<UserNotifications />} />
             <Route path="/tickets/:id"  element={<TicketDetailPage />} />
             <Route path="/profile"      element={<Profile />} />
           </Route>

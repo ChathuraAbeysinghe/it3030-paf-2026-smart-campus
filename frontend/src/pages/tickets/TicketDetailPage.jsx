@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ticketService, commentService, timelineService } from '../../services/ticketService';
 import { userService } from '../../services/api';
@@ -27,11 +27,11 @@ const STATUS_OPTIONS = {
 export default function TicketDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const currentUser = user || JSON.parse(localStorage.getItem('smartcampus_user') || '{}');
   const isAdmin = currentUser?.role === 'ADMIN';
   const isTech = currentUser?.role === 'TECHNICIAN';
-  const isCreator = ticket && currentUser?.id === ticket.createdBy;
 
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
@@ -49,6 +49,18 @@ export default function TicketDetailPage() {
   useEffect(() => {
     loadAll();
   }, [id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'timeline') {
+      setActiveSection('timeline');
+      return;
+    }
+    if (tab === 'conversation' || tab === 'chat') {
+      setActiveSection('conversation');
+    }
+  }, [location.search]);
 
   async function loadAll() {
     setLoading(true);

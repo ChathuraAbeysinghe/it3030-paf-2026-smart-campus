@@ -402,8 +402,13 @@ export const bookingService = {
 // ── Notification Service ─────────────────────────────────
 export const notificationService = {
   getByRole: async (role) => {
-    try { return (await api.get('/api/notifications', { params: { role } })).data; }
-    catch { return mockNotifications.filter(n => n.role === role); }
+    try {
+      const data = (await api.get('/api/notifications', { params: { role } })).data;
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.warn('Could not load notifications:', error?.message || error);
+      return mockNotifications.filter(n => n.role === role);
+    }
   },
   markAsRead: async (id) => {
     try { await api.patch(`/api/notifications/${id}/read`); }

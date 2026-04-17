@@ -1,3 +1,4 @@
+com\smartcampus\backend\config\DataSeederConfig.class
 com\smartcampus\backend\controller\TicketController.class
 com\smartcampus\backend\config\ResourceMongoConvertersConfig.class
 com\smartcampus\backend\repository\TicketNotificationRepository.class
@@ -12,6 +13,8 @@ com\smartcampus\backend\service\TicketCommentService.class
 com\smartcampus\backend\dto\ResourceRequest.class
 com\smartcampus\backend\model\Ticket$Attachment.class
 com\smartcampus\backend\dto\AssignTicketRequest.class
+com\smartcampus\backend\security\JwtAuthenticationFilter.class
+com\smartcampus\backend\controller\UsersController.class
 com\smartcampus\backend\model\Booking.class
 com\smartcampus\backend\exception\InvalidStatusTransitionException.class
 com\smartcampus\backend\dto\TicketResponse$TicketResponseBuilder.class
@@ -19,6 +22,7 @@ com\smartcampus\backend\dto\BookingDecisionRequest.class
 com\smartcampus\backend\service\CurrentUserService.class
 com\smartcampus\backend\model\TicketComment.class
 com\smartcampus\backend\model\TicketNotification.class
+com\smartcampus\backend\controller\NotificationController.class
 com\smartcampus\backend\dto\LoginRequest.class
 com\smartcampus\backend\model\TicketComment$TicketCommentBuilder.class
 com\smartcampus\backend\model\Ticket.class
@@ -32,6 +36,7 @@ com\smartcampus\backend\dto\TicketStatsResponse$TicketStatsResponseBuilder.class
 com\smartcampus\backend\model\enums\SlaStatus.class
 com\smartcampus\backend\dto\BookingResponse$BookingResponseBuilder.class
 com\smartcampus\backend\repository\TicketRepository.class
+com\smartcampus\backend\security\JwtService.class
 com\smartcampus\backend\model\TicketTimeline$TicketTimelineBuilder.class
 com\smartcampus\backend\controller\TicketCommentController.class
 com\smartcampus\backend\controller\TicketTimelineController.class
@@ -60,11 +65,8 @@ com\smartcampus\backend\repository\ResourceRepository.class
 com\smartcampus\backend\config\ResourceMongoConvertersConfig$StringToResourceTypeConverter.class
 com\smartcampus\backend\controller\BookingController.class
 com\smartcampus\backend\dto\BookingRequest.class
-<<<<<<< Updated upstream
-com\smartcampus\backend\model\enums\EventType.class
-=======
 com\smartcampus\backend\dto\ChangePasswordRequest.class
->>>>>>> Stashed changes
+com\smartcampus\backend\model\enums\EventType.class
 com\smartcampus\backend\model\User.class
 com\smartcampus\backend\model\Role.class
 com\smartcampus\backend\security\OAuth2AuthenticationSuccessHandler.class

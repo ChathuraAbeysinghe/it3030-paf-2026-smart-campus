@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap');
 
 html {
   scroll-behavior: smooth;
@@ -37,15 +37,9 @@ html {
 }
 
 .hp-page {
-<<<<<<< Updated upstream
-  background: var(--hp-color-bg);
-  color: var(--hp-color-text-primary);
-  font-family: 'Inter', sans-serif;
-=======
   font-family: 'Inter', sans-serif;
   background: var(--hp-color-bg);
   color: var(--hp-color-text-primary);
->>>>>>> Stashed changes
 }
 
 .hp-container {
@@ -59,24 +53,12 @@ html {
   left: 0;
   right: 0;
   z-index: 120;
-<<<<<<< Updated upstream
-  background: rgba(27, 42, 74, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 300ms ease;
-=======
   background: var(--hp-color-navy);
   transition: box-shadow 220ms ease;
->>>>>>> Stashed changes
 }
 
 .hp-navbar.is-scrolled {
   box-shadow: var(--hp-shadow-nav);
-<<<<<<< Updated upstream
-  background: rgba(27, 42, 74, 0.95);
-=======
->>>>>>> Stashed changes
 }
 
 .hp-navbar__inner {
@@ -84,11 +66,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-<<<<<<< Updated upstream
-  gap: var(--hp-space-lg);
-=======
   gap: 20px;
->>>>>>> Stashed changes
 }
 
 .hp-brand {
@@ -103,53 +81,31 @@ html {
   border-radius: 12px;
   padding: 9px 12px;
   display: inline-flex;
-<<<<<<< Updated upstream
-=======
   align-items: center;
->>>>>>> Stashed changes
   gap: 5px;
   line-height: 1;
 }
 
-<<<<<<< Updated upstream
-.hp-brand__mark span:first-child,
-.hp-brand__mark span:last-child {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.hp-brand__mark span:first-child {
-  color: var(--hp-color-navy);
-=======
 .hp-brand__mark span:first-child {
   color: var(--hp-color-navy);
   font-family: 'Montserrat', sans-serif;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.3px;
->>>>>>> Stashed changes
 }
 
 .hp-brand__mark span:last-child {
   color: var(--hp-color-primary);
-<<<<<<< Updated upstream
-=======
   font-family: 'Montserrat', sans-serif;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.3px;
->>>>>>> Stashed changes
 }
 
 .hp-brand__text {
   color: var(--hp-color-white);
   font-family: 'Montserrat', sans-serif;
-<<<<<<< Updated upstream
-  font-size: 16px;
-=======
   font-size: 1rem;
->>>>>>> Stashed changes
   font-weight: 700;
 }
 
@@ -162,11 +118,7 @@ html {
 .hp-nav-links a {
   color: var(--hp-color-white);
   text-decoration: none;
-<<<<<<< Updated upstream
-  font-size: 15px;
-=======
   font-size: 0.94rem;
->>>>>>> Stashed changes
   font-weight: 500;
   position: relative;
   padding-bottom: 4px;
@@ -179,15 +131,6 @@ html {
   bottom: 0;
   width: 100%;
   height: 2px;
-<<<<<<< Updated upstream
-  background: var(--hp-color-primary);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 180ms ease;
-}
-
-.hp-nav-links a:hover::after,
-=======
   transform: scaleX(0);
   transform-origin: left;
   background: var(--hp-color-primary);
@@ -198,7 +141,6 @@ html {
   transform: scaleX(1);
 }
 
->>>>>>> Stashed changes
 .hp-nav-links a.is-active::after {
   transform: scaleX(1);
 }
@@ -212,13 +154,8 @@ html {
 .hp-login-link {
   color: var(--hp-color-white);
   text-decoration: none;
-<<<<<<< Updated upstream
-  font-size: 14px;
-  font-weight: 500;
-=======
   font-weight: 500;
   font-size: 0.92rem;
->>>>>>> Stashed changes
 }
 
 .hp-login-link:hover {
@@ -229,25 +166,15 @@ html {
   border: none;
   text-decoration: none;
   border-radius: var(--hp-radius-full);
-<<<<<<< Updated upstream
-  height: 44px;
-  padding: 0 22px;
-=======
   padding: 0 22px;
   height: 44px;
->>>>>>> Stashed changes
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-family: 'Inter', sans-serif;
-<<<<<<< Updated upstream
-  font-size: 14px;
-  font-weight: 600;
-=======
   font-weight: 600;
   font-size: 0.88rem;
->>>>>>> Stashed changes
   transition: all 200ms ease;
   cursor: pointer;
 }
@@ -262,15 +189,9 @@ html {
 }
 
 .hp-btn--outline {
-<<<<<<< Updated upstream
-  background: transparent;
-  border: 1.4px solid rgba(255, 255, 255, 0.75);
-  color: var(--hp-color-white);
-=======
   border: 1.4px solid rgba(255, 255, 255, 0.7);
   color: var(--hp-color-white);
   background: transparent;
->>>>>>> Stashed changes
 }
 
 .hp-btn--outline:hover {
@@ -281,10 +202,6 @@ html {
 .hp-btn--cta {
   background: var(--hp-color-primary);
   color: var(--hp-color-navy);
-<<<<<<< Updated upstream
-  font-size: 15px;
-=======
->>>>>>> Stashed changes
   font-weight: 700;
   height: 52px;
   padding: 0 30px;
@@ -296,18 +213,10 @@ html {
 }
 
 .hp-btn--ghost {
-<<<<<<< Updated upstream
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--hp-color-white);
-=======
   background: rgba(27, 42, 74, 0.45);
   color: var(--hp-color-white);
   border: 1.2px solid rgba(255, 255, 255, 0.86);
   font-weight: 600;
->>>>>>> Stashed changes
   height: 52px;
   padding: 0 30px;
 }
@@ -323,14 +232,9 @@ html {
   background: transparent;
   width: 44px;
   height: 44px;
-<<<<<<< Updated upstream
-  border-radius: 10px;
-  padding: 8px;
-=======
   padding: 8px;
   gap: 5px;
   border-radius: 10px;
->>>>>>> Stashed changes
   cursor: pointer;
 }
 
@@ -343,40 +247,10 @@ html {
   transition: transform 180ms ease;
 }
 
-<<<<<<< Updated upstream
-.hp-menu-toggle span + span {
-  margin-top: 5px;
-}
-
-.hp-menu-toggle.is-open span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.hp-menu-toggle.is-open span:nth-child(2) {
-  opacity: 0;
-}
-
-.hp-menu-toggle.is-open span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-=======
->>>>>>> Stashed changes
 .hp-nav-links__mobile-actions {
   display: none;
 }
 
-<<<<<<< Updated upstream
-.hp-hero {
-  min-height: 100vh;
-  background-image: url('/sliit-bg.jpg');
-  background-position: center;
-  background-size: cover;
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding-top: 84px;
-=======
 .hp-mobile-login {
   color: var(--hp-color-navy) !important;
 }
@@ -399,33 +273,21 @@ html {
   display: flex;
   align-items: center;
   padding-top: 88px;
->>>>>>> Stashed changes
 }
 
 .hp-hero__overlay {
   position: absolute;
   inset: 0;
-<<<<<<< Updated upstream
-  background: linear-gradient(135deg, rgba(14, 25, 50, 0.92) 0%, rgba(27, 42, 74, 0.6) 100%);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-=======
   background: linear-gradient(105deg, rgba(14, 25, 50, 0.88) 0%, var(--hp-color-overlay) 46%, rgba(27, 42, 74, 0.22) 100%);
->>>>>>> Stashed changes
 }
 
 .hp-hero__content {
   position: relative;
   z-index: 2;
-<<<<<<< Updated upstream
-  max-width: 680px;
-  padding-block: var(--hp-space-3xl);
-=======
   max-width: 690px;
   margin: 0;
   padding-block: var(--hp-space-3xl);
   padding-inline: 24px;
->>>>>>> Stashed changes
 }
 
 .hp-pill {
@@ -436,16 +298,9 @@ html {
   color: var(--hp-color-navy);
   border-radius: var(--hp-radius-full);
   padding: 10px 18px;
-<<<<<<< Updated upstream
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  animation: hpFadeUp 0.6s ease both;
-=======
   font-size: 0.82rem;
   font-weight: 600;
   margin-bottom: 24px;
->>>>>>> Stashed changes
 }
 
 .hp-pill span {
@@ -460,53 +315,6 @@ html {
   line-height: 1.06;
   letter-spacing: -1px;
   margin-bottom: 18px;
-<<<<<<< Updated upstream
-  animation: hpFadeUp 0.6s ease 0.1s both;
-}
-
-.hp-hero h1 span {
-  background: linear-gradient(90deg, #FFFFFF 0%, var(--hp-color-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hp-hero p {
-  color: rgba(255, 255, 255, 0.76);
-  font-size: 18px;
-  line-height: 1.65;
-  max-width: 620px;
-  margin-bottom: 30px;
-  animation: hpFadeUp 0.6s ease 0.2s both;
-}
-
-.hp-hero__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 20px;
-  animation: hpFadeUp 0.6s ease 0.4s both;
-}
-
-.hp-trust-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
-  font-weight: 500;
-  animation: hpFadeUp 0.6s ease 0.5s both;
-}
-
-.hp-trust-row strong {
-  color: var(--hp-color-success);
-}
-
-.hp-stats-wrap {
-  margin-top: -56px;
-  position: relative;
-  z-index: 5;
-=======
 }
 
 .hp-hero h1 span {
@@ -556,7 +364,6 @@ html {
   margin-top: -58px;
   position: relative;
   z-index: 4;
->>>>>>> Stashed changes
 }
 
 .hp-stats {
@@ -566,48 +373,6 @@ html {
 }
 
 .hp-stat-card {
-<<<<<<< Updated upstream
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: var(--hp-radius-lg);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-  padding: 24px;
-  animation: hpFadeUp 0.55s ease both;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hp-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-}
-
-.hp-stat-card__icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-
-.hp-stat-card__icon--navy {
-  background: rgba(27, 42, 74, 0.12);
-  color: var(--hp-color-navy);
-}
-
-.hp-stat-card__icon--amber {
-  background: rgba(245, 166, 35, 0.18);
-  color: #C57C06;
-}
-
-.hp-stat-card__icon--green {
-  background: rgba(45, 189, 135, 0.18);
-  color: #1D9468;
-=======
   background: var(--hp-color-white);
   border: 1px solid var(--hp-color-border);
   border-radius: var(--hp-radius-lg);
@@ -626,29 +391,10 @@ html {
 .hp-stat-card__icon {
   font-size: 1.2rem;
   margin-bottom: 8px;
->>>>>>> Stashed changes
 }
 
 .hp-stat-card__value {
   font-family: 'Montserrat', sans-serif;
-<<<<<<< Updated upstream
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.hp-stat-card__label {
-  margin-top: 6px;
-  font-size: 11px;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--hp-color-text-secondary);
-}
-
-.hp-section {
-  padding: 84px 0;
-=======
   font-size: 2.2rem;
   font-weight: 700;
   line-height: 1.1;
@@ -679,31 +425,12 @@ html {
 
 .hp-section {
   padding: 96px 0;
->>>>>>> Stashed changes
 }
 
 .hp-section--soft {
   background: var(--hp-color-bg);
 }
 
-<<<<<<< Updated upstream
-.hp-section--white {
-  background: var(--hp-color-white);
-}
-
-.hp-section-title {
-  font-family: 'Montserrat', sans-serif;
-  color: var(--hp-color-navy);
-  font-size: clamp(2rem, 3.6vw, 2.5rem);
-  margin-bottom: 30px;
-}
-
-.hp-section-title--center {
-  text-align: center;
-}
-
-.hp-action-grid {
-=======
 .hp-section__header {
   margin-bottom: 44px;
 }
@@ -728,51 +455,12 @@ html {
 }
 
 .hp-actions-grid {
->>>>>>> Stashed changes
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
 
 .hp-action-card {
-<<<<<<< Updated upstream
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: var(--hp-radius-lg);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-  padding: 24px;
-  display: grid;
-  gap: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hp-action-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(27, 42, 74, 0.08);
-}
-
-.hp-action-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.hp-action-card__icon--amber { background: rgba(245, 166, 35, 0.18); }
-.hp-action-card__icon--orange { background: rgba(251, 146, 60, 0.18); }
-.hp-action-card__icon--teal { background: rgba(20, 184, 166, 0.16); }
-.hp-action-card__icon--indigo { background: rgba(99, 102, 241, 0.16); }
-
-.hp-action-card h3 {
-  font-size: 20px;
-  font-family: 'Montserrat', sans-serif;
-  color: var(--hp-color-navy);
-=======
   background: var(--hp-color-white);
   border: 1px solid var(--hp-color-border);
   border-radius: var(--hp-radius-lg);
@@ -805,23 +493,10 @@ html {
   font-family: 'Montserrat', sans-serif;
   margin-bottom: 8px;
   font-size: 1.08rem;
->>>>>>> Stashed changes
 }
 
 .hp-action-card p {
   color: var(--hp-color-text-secondary);
-<<<<<<< Updated upstream
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.hp-action-card__link {
-  justify-self: end;
-  text-decoration: none;
-  color: var(--hp-color-primary-dark);
-  font-size: 22px;
-  font-weight: 700;
-=======
   font-size: 0.94rem;
   line-height: 1.6;
   margin-bottom: 20px;
@@ -842,76 +517,11 @@ html {
 
 .hp-action-card:hover .hp-action-card__link span {
   transform: translateX(4px);
->>>>>>> Stashed changes
 }
 
 .hp-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-<<<<<<< Updated upstream
-  gap: 20px;
-}
-
-.hp-step {
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--hp-radius-lg);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-}
-
-.hp-step__icon-wrap {
-  position: relative;
-  width: 66px;
-  height: 66px;
-  margin: 0 auto 14px;
-}
-
-.hp-step__icon {
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
-  background: rgba(27, 42, 74, 0.1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-}
-
-.hp-step__num {
-  position: absolute;
-  right: -2px;
-  top: -2px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--hp-color-primary);
-  color: var(--hp-color-navy);
-  font-size: 12px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hp-step h3 {
-  font-family: 'Montserrat', sans-serif;
-  margin-bottom: 8px;
-  color: var(--hp-color-navy);
-}
-
-.hp-step p {
-  color: var(--hp-color-text-secondary);
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.hp-activity-wrap {
-  padding-top: 40px;
-=======
   gap: 18px;
   position: relative;
 }
@@ -976,7 +586,6 @@ html {
 
 .hp-activity-wrap {
   padding-top: 64px;
->>>>>>> Stashed changes
 }
 
 .hp-two-col {
@@ -986,107 +595,6 @@ html {
 }
 
 .hp-panel {
-<<<<<<< Updated upstream
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: var(--hp-radius-lg);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-  padding: 22px;
-}
-
-.hp-panel h3 {
-  color: var(--hp-color-navy);
-  font-family: 'Montserrat', sans-serif;
-  margin-bottom: 14px;
-}
-
-.hp-feed,
-.hp-events {
-  display: grid;
-  gap: 10px;
-}
-
-.hp-feed__item,
-.hp-events__item {
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 12px;
-  display: grid;
-  gap: 8px;
-  align-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-}
-
-.hp-feed__item {
-  grid-template-columns: 34px 1fr auto;
-}
-
-.hp-feed__icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: rgba(27, 42, 74, 0.1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hp-feed__item strong,
-.hp-events__item strong {
-  font-size: 14px;
-  color: var(--hp-color-navy);
-}
-
-.hp-feed__item p,
-.hp-events__item p {
-  font-size: 12px;
-  color: var(--hp-color-text-secondary);
-}
-
-.hp-feed__item small {
-  font-size: 11px;
-  color: var(--hp-color-text-secondary);
-}
-
-.hp-events__item {
-  grid-template-columns: 54px 1fr auto;
-}
-
-.hp-events__date {
-  width: 50px;
-  border-radius: 10px;
-  border: 1px solid rgba(245, 166, 35, 0.35);
-  background: rgba(245, 166, 35, 0.1);
-  text-align: center;
-  padding: 6px 0;
-}
-
-.hp-events__date strong {
-  display: block;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.hp-events__date span {
-  font-size: 11px;
-  font-weight: 700;
-  color: #A26308;
-}
-
-.hp-events__tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(36, 53, 96, 0.1);
-  color: var(--hp-color-navy);
-=======
   background: var(--hp-color-white);
   border: 1px solid var(--hp-color-border);
   border-radius: var(--hp-radius-lg);
@@ -1186,34 +694,10 @@ html {
   background: rgba(36, 53, 96, 0.1);
   border-radius: var(--hp-radius-full);
   padding: 6px 10px;
->>>>>>> Stashed changes
 }
 
 .hp-footer {
   background: var(--hp-color-navy);
-<<<<<<< Updated upstream
-  padding: 24px 0;
-}
-
-.hp-footer__inner {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 20px;
-}
-
-.hp-footer__links {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-}
-
-.hp-footer__links a,
-.hp-footer__copy {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  font-size: 14px;
-=======
   color: rgba(255, 255, 255, 0.82);
   padding: 28px 0;
 }
@@ -1251,37 +735,24 @@ html {
   color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
   font-size: 0.86rem;
->>>>>>> Stashed changes
 }
 
 .hp-footer__links a:hover {
   color: var(--hp-color-primary);
 }
 
-<<<<<<< Updated upstream
-@keyframes hpFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-=======
 .hp-footer__copyright {
   color: rgba(255, 255, 255, 0.68);
   font-size: 0.82rem;
 }
 
 @keyframes hpFadeUp {
->>>>>>> Stashed changes
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-<<<<<<< Updated upstream
-@media (max-width: 1024px) {
-  .hp-nav-links,
-=======
 @media (max-width: 1120px) {
   .hp-nav-links {
     position: absolute;
@@ -1321,53 +792,11 @@ html {
     padding-top: 8px;
   }
 
->>>>>>> Stashed changes
   .hp-navbar__actions {
     display: none;
   }
 
   .hp-menu-toggle {
-<<<<<<< Updated upstream
-    display: block;
-  }
-
-  .hp-nav-links.is-open {
-    display: grid;
-    position: fixed;
-    top: 84px;
-    left: 16px;
-    right: 16px;
-    background: #FFFFFF;
-    border-radius: 14px;
-    border: 1px solid var(--hp-color-border);
-    box-shadow: var(--hp-shadow-card);
-    padding: 16px;
-    gap: 12px;
-    z-index: 130;
-  }
-
-  .hp-nav-links.is-open a {
-    color: var(--hp-color-navy);
-    padding-bottom: 8px;
-  }
-
-  .hp-nav-links__mobile-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 8px;
-  }
-
-  .hp-nav-links__mobile-actions .hp-btn--outline {
-    color: var(--hp-color-navy);
-    border-color: var(--hp-color-navy);
-  }
-
-  .hp-nav-links__mobile-actions .hp-btn--ghost {
-    color: #FFFFFF;
-    background: var(--hp-color-navy);
-    border-color: var(--hp-color-navy);
-=======
     display: inline-flex;
     flex-direction: column;
     justify-content: center;
@@ -1384,25 +813,12 @@ html {
 
   .hp-menu-toggle.is-open span:nth-child(3) {
     transform: translateY(-7px) rotate(-45deg);
->>>>>>> Stashed changes
   }
 
   .hp-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-<<<<<<< Updated upstream
-  .hp-action-grid,
-  .hp-steps,
-  .hp-two-col {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 639px) {
-  .hp-container {
-    width: min(1180px, calc(100% - 28px));
-=======
   .hp-actions-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1427,30 +843,12 @@ html {
 
   .hp-container {
     width: calc(100% - 28px);
->>>>>>> Stashed changes
   }
 
   .hp-navbar__inner {
     height: 72px;
   }
 
-<<<<<<< Updated upstream
-  .hp-hero {
-    min-height: 92vh;
-    padding-top: 72px;
-  }
-
-  .hp-hero__content {
-    padding-block: 56px;
-  }
-
-  .hp-hero p {
-    font-size: 16px;
-  }
-
-  .hp-hero__cta {
-    flex-direction: column;
-=======
   .hp-brand__text {
     display: none;
   }
@@ -1484,7 +882,6 @@ html {
   .hp-hero__actions {
     flex-direction: column;
     align-items: stretch;
->>>>>>> Stashed changes
   }
 
   .hp-btn--cta,
@@ -1493,15 +890,6 @@ html {
   }
 
   .hp-stats-wrap {
-<<<<<<< Updated upstream
-    margin-top: 18px;
-  }
-
-  .hp-stats,
-  .hp-action-grid,
-  .hp-steps,
-  .hp-two-col {
-=======
     margin-top: -36px;
   }
 
@@ -1514,21 +902,10 @@ html {
   }
 
   .hp-actions-grid {
->>>>>>> Stashed changes
     grid-template-columns: 1fr;
   }
 
   .hp-footer__inner {
-<<<<<<< Updated upstream
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: 12px;
-  }
-
-  .hp-footer__links {
-    flex-wrap: wrap;
-  }
-=======
     justify-content: center;
     text-align: center;
   }
@@ -1582,5 +959,4 @@ html {
     background: rgba(245, 166, 35, 0.2);
     color: var(--hp-color-primary);
   }
->>>>>>> Stashed changes
 }

@@ -9,6 +9,8 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Resource.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceStatus.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\SlaStatus.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\ChangePasswordRequest.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketPriority.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketPriority.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingResponse.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\ChangePasswordRequest.java
@@ -27,6 +29,7 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\BookingType.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\service\TicketService.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\TicketController.java
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\NotificationController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\EventType.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\TicketComment.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\User.java

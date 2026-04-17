@@ -1,11 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../../services/notificationService';
 
 const TYPE_LABEL = {
   BOOKING: 'BK',
   TICKET: 'TK',
+  TICKET_CREATED: 'TK',
+  TICKET_ASSIGNED: 'TK',
+  STATUS_UPDATED: 'TK',
+  COMMENT_ADDED: 'TK',
+  DISPUTED: 'TK',
+  CLOSED: 'TK',
   SYSTEM: 'SY',
 };
+
+function ticketPathByRole(role, ticketId) {
+  if (!ticketId) return null;
+  if (role === 'ADMIN') return `/admin/tickets/${ticketId}?tab=chat`;
+  if (role === 'TECHNICIAN') return `/technician/tickets/${ticketId}?tab=conversation`;
+  return `/tickets/${ticketId}?tab=conversation`;
+}
 
 function timeAgo(dateStr) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -17,22 +31,21 @@ function timeAgo(dateStr) {
   return `${Math.floor(hours / 24)}d`;
 }
 
-<<<<<<< Updated upstream
-function NotificationBadge({ role = 'USER' }) {
-=======
 export default function NotificationBadge({ role = 'USER' }) {
->>>>>>> Stashed changes
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const wrapRef = useRef(null);
 
   const loadNotifications = useCallback(async () => {
     const data = await notificationService.getNotifications(role);
-    setNotifications(data);
+    setNotifications(Array.isArray(data) ? data : []);
   }, [role]);
 
   useEffect(() => {
     loadNotifications();
+    const timerId = window.setInterval(loadNotifications, 30000);
+    return () => window.clearInterval(timerId);
   }, [loadNotifications]);
 
   useEffect(() => {
@@ -48,11 +61,17 @@ export default function NotificationBadge({ role = 'USER' }) {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [open]);
 
-  const unreadCount = notifications.filter((item) => !item.read).length;
+  const unreadCount = notifications.filter((item) => !item?.read).length;
 
-  const handleRead = async (id) => {
-    await notificationService.markAsRead(id);
-    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, read: true } : item)));
+  const handleRead = async (item) => {
+    await notificationService.markAsRead(item.id);
+    setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
+
+    const path = ticketPathByRole(role, item.relatedTicketId);
+    if (path) {
+      setOpen(false);
+      navigate(path);
+    }
   };
 
   return (
@@ -82,7 +101,7 @@ export default function NotificationBadge({ role = 'USER' }) {
                 key={item.id}
                 type="button"
                 className={`auth-notification__item ${item.read ? '' : 'is-unread'}`}
-                onClick={() => handleRead(item.id)}
+                onClick={() => handleRead(item)}
               >
                 <span className="auth-notification__type">{TYPE_LABEL[item.type] ?? 'IN'}</span>
                 <span className="auth-notification__content">
@@ -107,8 +126,3 @@ function BellIcon() {
     </svg>
   );
 }
-<<<<<<< Updated upstream
-
-export default NotificationBadge;
-=======
->>>>>>> Stashed changes
