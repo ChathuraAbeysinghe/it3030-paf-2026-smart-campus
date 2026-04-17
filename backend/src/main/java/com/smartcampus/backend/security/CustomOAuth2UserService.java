@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Value("${app.admin-emails:}")
     private String adminEmailsConfig;
 
-    private static final String SLIIT_DOMAIN = "@my.sliit.lk";
+        private static final Pattern SLIIT_EMAIL_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9._%+\\-]+@(my\\.)?sliit\\.lk$");
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -37,11 +39,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String name    = (String) attributes.get("name");
         String picture = (String) attributes.get("picture");
 
-        // ── SLIIT Campus Email Validation ──
-        if (email == null || !email.toLowerCase().endsWith(SLIIT_DOMAIN)) {
+        String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+
+        // ── SLIIT Campus Email Validation (students + staff) ──
+        if (normalizedEmail == null || !SLIIT_EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
             throw new OAuth2AuthenticationException(
                 new OAuth2Error("invalid_email", "Access restricted to SLIIT students only", null),
-                "Access restricted to SLIIT students only. Please use your @my.sliit.lk email."
+                "Access restricted to SLIIT users only. Please use your @my.sliit.lk or @sliit.lk email."
             );
         }
 
@@ -50,7 +54,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 ? List.of()
                 : Arrays.asList(adminEmailsConfig.split(","));
 
-        Optional<User> existingUser = userRepository.findByEmail(email);
+        Optional<User> existingUser = userRepository.findByEmail(normalizedEmail);
 
         if (existingUser.isPresent()) {
             // Update name/picture in case they changed on Google side
@@ -60,11 +64,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userRepository.save(user);
         } else {
             // First login — assign role
-            Role role = adminEmails.contains(email.trim()) ? Role.ADMIN : Role.USER;
+            Role role = adminEmails.contains(normalizedEmail) ? Role.ADMIN : Role.USER;
 
             User newUser = User.builder()
                     .name(name)
-                    .email(email)
+                    .email(normalizedEmail)
                     .picture(picture)
                     .role(role)
                     .build();

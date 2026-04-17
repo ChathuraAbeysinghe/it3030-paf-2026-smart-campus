@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Students: IT12345678@my.sliit.lk  |  Staff/Admin/Tech: admin@sliit.lk
@@ -8,6 +8,7 @@ const SLIIT_EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(my\.)?sliit\.lk$/i;
 export default function Login() {
   const { loginWithGoogle, loginManual } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +16,8 @@ export default function Login() {
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const oauthError = searchParams.get('oauthError');
 
   const validate = () => {
     const errs = {};
@@ -67,6 +70,24 @@ export default function Login() {
           <div className="auth-toast auth-toast--error animate-in">
             <span className="auth-toast-icon">⚠️</span>
             {apiError}
+          </div>
+        )}
+
+        {oauthError && (
+          <div className="auth-toast auth-toast--error animate-in">
+            <span className="auth-toast-icon">⚠️</span>
+            {oauthError}
+            <button
+              type="button"
+              onClick={() => {
+                searchParams.delete('oauthError');
+                setSearchParams(searchParams, { replace: true });
+              }}
+              style={{ marginLeft: 8, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}
+              aria-label="Dismiss OAuth error"
+            >
+              ✕
+            </button>
           </div>
         )}
 

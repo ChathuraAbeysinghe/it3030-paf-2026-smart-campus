@@ -8,15 +8,9 @@ D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\controller\TicketTimelineController.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\Resource.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\ResourceStatus.java
-<<<<<<< Updated upstream
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\SlaStatus.java
-D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketPriority.java
-=======
-D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingResponse.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\ChangePasswordRequest.java
-D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\config\SecurityConfig.java
-D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingRequest.java
->>>>>>> Stashed changes
+D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\model\enums\TicketPriority.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\repository\ResourceRepository.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\dto\BookingDecisionRequest.java
 D:\Campus\Y3 S1 S2\S1\PAF\Project\it3030-paf-2026-smart-campus\backend\src\main\java\com\smartcampus\backend\security\OAuth2AuthenticationSuccessHandler.java
