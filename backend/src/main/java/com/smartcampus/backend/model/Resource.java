@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -28,6 +30,15 @@ public class Resource {
     // Daily available time window for this resource (HH:mm)
     private String availableFrom;
     private String availableTo;
+
+    private String buildingName;
+    private String block;
+    private Integer floor;
+    private Integer hallNumber;
+    private String hallId;
+
+    @Builder.Default
+    private List<String> facilities = new ArrayList<>();
 
     @Builder.Default
     private ResourceStatus status = ResourceStatus.ACTIVE;

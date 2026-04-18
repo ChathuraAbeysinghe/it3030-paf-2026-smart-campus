@@ -1,40 +1,70 @@
 import { useState, useEffect } from 'react';
+import { Clock, Flame } from 'lucide-react';
 
 /**
  * SLA Countdown Timer.
  * Shows time remaining until deadline. Changes color as it approaches.
  */
-export default function SLATimer({ deadline }) {
+export default function SLATimer({ deadline, onExpireChange }) {
   const [remaining, setRemaining] = useState(calcRemaining(deadline));
 
   useEffect(() => {
-    const timer = setInterval(() => setRemaining(calcRemaining(deadline)), 60000);
+    const timer = setInterval(() => {
+      const newRemaining = calcRemaining(deadline);
+      setRemaining(newRemaining);
+      if (onExpireChange && newRemaining.expired !== remaining.expired) {
+        onExpireChange(newRemaining.expired);
+      }
+    }, 60000);
     return () => clearInterval(timer);
-  }, [deadline]);
+  }, [deadline, onExpireChange, remaining.expired]);
+
+  // Initial call parent update
+  useEffect(() => {
+    if (onExpireChange) {
+      onExpireChange(remaining.expired);
+    }
+  }, []);
 
   if (!deadline) return null;
 
-  const { hours, minutes, expired, color, label } = remaining;
+  const { hours, minutes, expired, state } = remaining;
+
+  if (expired) {
+    return (
+      <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5 w-fit">
+        <Flame className="text-red-500" size={14} />
+        <span className="text-red-600 text-xs font-medium">SLA Breached</span>
+      </div>
+    );
+  }
+
+  if (state === 'RISK') {
+    return (
+      <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 w-fit">
+        <Clock className="text-amber-500" size={14} />
+        <span className="text-amber-600 text-xs font-medium">{hours}h {minutes}m left</span>
+      </div>
+    );
+  }
 
   return (
-    <span className="sla-timer" style={{ color, borderColor: color + '40' }}>
-      ⏱ {expired ? 'OVERDUE' : `${hours}h ${minutes}m`}
-      <span className="sla-timer-label">{label}</span>
-    </span>
+    <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 w-fit">
+      <Clock className="text-green-500" size={14} />
+      <span className="text-green-600 text-xs font-medium">{hours}h {minutes}m left</span>
+    </div>
   );
 }
 
 function calcRemaining(deadline) {
   const diff = new Date(deadline).getTime() - Date.now();
-  if (diff <= 0) return { hours: 0, minutes: 0, expired: true, color: '#EF4444', label: 'SLA Breached' };
+  if (diff <= 0) return { hours: 0, minutes: 0, expired: true, state: 'BREACHED' };
 
   const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
 
-  let color = '#34D399'; // green
-  let label = 'On Track';
-  if (hours < 4) { color = '#FBBF24'; label = 'Approaching'; }
-  if (hours < 1) { color = '#F87171'; label = 'Urgent'; }
+  let state = 'SAFE';
+  if (hours < 4) { state = 'RISK'; }
 
-  return { hours, minutes, expired: false, color, label };
+  return { hours, minutes, expired: false, state };
 }

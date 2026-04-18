@@ -6,7 +6,6 @@ const NAV_ITEMS = [
   { to: '/technician/dashboard',  icon: '📊', label: 'Dashboard'  },
   { to: '/technician/assigned',   icon: '🔧', label: 'My Tickets' },
   { to: '/technician/unassigned', icon: '📋', label: 'Unassigned' },
-  { to: '/technician/notifications', icon: '🔔', label: 'Notifications' },
 ];
 
 export default function TechnicianLayout() {
@@ -48,7 +47,7 @@ export default function TechnicianLayout() {
           <div>
             <div
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', marginBottom: 8, cursor: 'pointer' }}
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/technician/profile')}
             >
               {user.picture
                 ? <img src={user.picture} alt="" className="user-avatar" style={{ width: 36, height: 36 }} />

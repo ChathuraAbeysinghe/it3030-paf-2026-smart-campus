@@ -56,6 +56,12 @@ yarn-error.log*
 pnpm-debug.log*
 logs/
 
+# Workspace-specific frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
 # ========================
 # Java / Spring Boot / Backend
 # ========================
@@ -74,7 +80,9 @@ target/
 hs_err_pid*
 replay_pid*
 
+# Workspace-specific backend artifacts
+backend/target/
+
 # Local secrets (do not commit)
-backend/src/main/resources/application-local.properties
 .mvn/wrapper/maven-wrapper.jar
 

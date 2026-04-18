@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react';
-import { bookingService, ticketService, resourceService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { bookingService, resourceService } from '../../services/api';
+import { ticketService } from '../../services/ticketService';
 import { userService } from '../../services/api';
 import StatCard from '../../components/StatCard';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Admin Dashboard — analytics overview with mock charts.
  */
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [stats, setStats] = useState({ users: 0, resources: 0, bookings: 0, tickets: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token && !user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     (async () => {
       const [users, resources, bookings, tickets] = await Promise.all([
         userService.getAll(),
@@ -31,7 +42,7 @@ export default function AdminDashboard() {
       ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6);
       setRecentActivity(activity);
     })();
-  }, []);
+  }, [navigate, user]);
 
   return (
     <div className="animate-in">

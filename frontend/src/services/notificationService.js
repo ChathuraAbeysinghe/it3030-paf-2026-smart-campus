@@ -10,6 +10,7 @@ import { mockNotifications } from '../mock/notifications';
 
 // ── In-memory working copy of mock data ──────────────────────────
 let _mockStore = mockNotifications.map(n => ({ ...n }));
+const isLocalMockSession = () => localStorage.getItem('smartcampus_auth_mode') === 'local';
 
 export const notificationService = {
   /**
@@ -17,10 +18,17 @@ export const notificationService = {
    * @param {string} role - 'USER' | 'ADMIN' | 'TECHNICIAN'
    */
   async getNotifications(role) {
+    if (isLocalMockSession()) {
+      return _mockStore
+        .filter(n => n.role === role)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
     try {
       const { data } = await api.get('/api/notifications', { params: { role } });
-      return data;
-    } catch {
+      const rows = Array.isArray(data) ? data : [];
+      return rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (error) {
+      console.warn('Could not load notifications:', error?.message || error);
       // Fallback: filter mock store by role
       return _mockStore
         .filter(n => n.role === role)
@@ -32,6 +40,11 @@ export const notificationService = {
    * Mark a single notification as read.
    */
   async markAsRead(id) {
+    if (isLocalMockSession()) {
+      const n = _mockStore.find(n => n.id === id);
+      if (n) n.read = true;
+      return;
+    }
     try {
       await api.patch(`/api/notifications/${id}/read`);
     } catch {
@@ -44,6 +57,10 @@ export const notificationService = {
    * Mark ALL notifications as read for a role.
    */
   async markAllAsRead(role) {
+    if (isLocalMockSession()) {
+      _mockStore.filter(n => n.role === role).forEach(n => { n.read = true; });
+      return;
+    }
     try {
       await api.patch('/api/notifications/read-all', { role });
     } catch {
@@ -55,6 +72,10 @@ export const notificationService = {
    * Delete (clear) all notifications for a role.
    */
   async clearAll(role) {
+    if (isLocalMockSession()) {
+      _mockStore = _mockStore.filter(n => n.role !== role);
+      return;
+    }
     try {
       await api.delete('/api/notifications', { params: { role } });
     } catch {

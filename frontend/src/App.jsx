@@ -1,11 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth }  from './context/AuthContext';
+import { useAuth }  from './context/AuthContext';
 import ProtectedRoute             from './components/ProtectedRoute';
+import LoadingSpinner            from './components/LoadingSpinner';
 
 // Auth pages (unchanged)
 import Login                      from './pages/Login';
 import Register                   from './pages/Register';
 import OAuthCallback              from './pages/OAuthCallback';
+import Homepage                   from './pages/Homepage';
 
 // Layouts
 import UserLayout                 from './layouts/UserLayout';
@@ -17,6 +19,7 @@ import Home                       from './pages/user/Home';
 import Resources                  from './pages/user/Resources';
 import MyBookings                 from './pages/user/MyBookings';
 import MyTickets                  from './pages/user/MyTickets';
+import TicketDetailPage           from './pages/tickets/TicketDetailPage';
 import Profile                    from './pages/user/Profile';
 
 // ADMIN pages
@@ -24,22 +27,17 @@ import AdminDashboard             from './pages/admin/Dashboard';
 import ManageResources            from './pages/admin/ManageResources';
 import ManageBookings             from './pages/admin/ManageBookings';
 import ManageTickets              from './pages/admin/ManageTickets';
-import AdminNotifications         from './pages/admin/Notifications';
+import AdminTicketDetail         from './pages/admin/AdminTicketDetail';
 
 // TECHNICIAN pages
 import TechDashboard              from './pages/technician/Dashboard';
 import AssignedTickets            from './pages/technician/AssignedTickets';
 import UnassignedTickets          from './pages/technician/UnassignedTickets';
-import TechNotifications          from './pages/technician/Notifications';
 
-function RootRedirect() {
+function PublicEntry() {
   const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="spinner-overlay">
-      <div className="spinner" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Homepage />;
   const routes = {
     ADMIN:      '/admin/dashboard',
     TECHNICIAN: '/technician/dashboard',
@@ -49,19 +47,22 @@ function RootRedirect() {
 }
 
 export default function App() {
+  const { loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* ── Public ── */}
-          <Route path="/"              element={<RootRedirect />} />
+    <BrowserRouter>
+      <Routes>
+          {/* ── Public Routes ── */}
+          <Route path="/"              element={<PublicEntry />} />
+          <Route path="/home"          element={<Homepage />} />
           <Route path="/login"         element={<Login />} />
           <Route path="/register"      element={<Register />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
 
           {/* ── USER (Student) — Navbar Layout ── */}
           <Route element={
-            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'TECHNICIAN']}>
+            <ProtectedRoute allowedRoles={['USER']}>
               <UserLayout />
             </ProtectedRoute>
           }>
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="/resources"    element={<Resources />} />
             <Route path="/my-bookings"  element={<MyBookings />} />
             <Route path="/my-tickets"   element={<MyTickets />} />
+            <Route path="/tickets/:id"  element={<TicketDetailPage />} />
             <Route path="/profile"      element={<Profile />} />
           </Route>
 
@@ -82,7 +84,8 @@ export default function App() {
             <Route path="/admin/resources"     element={<ManageResources />} />
             <Route path="/admin/bookings"      element={<ManageBookings />} />
             <Route path="/admin/tickets"       element={<ManageTickets />} />
-            <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/tickets/:id"  element={<AdminTicketDetail />} />
+            <Route path="/admin/profile"       element={<Profile />} />
           </Route>
 
           {/* ── TECHNICIAN — Sidebar Dashboard ── */}
@@ -94,13 +97,13 @@ export default function App() {
             <Route path="/technician/dashboard"     element={<TechDashboard />} />
             <Route path="/technician/assigned"       element={<AssignedTickets />} />
             <Route path="/technician/unassigned"     element={<UnassignedTickets />} />
-            <Route path="/technician/notifications"  element={<TechNotifications />} />
+            <Route path="/technician/tickets/:id"   element={<TicketDetailPage />} />
+            <Route path="/technician/profile"        element={<Profile />} />
           </Route>
 
           {/* ── Catch-all ── */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Routes>
+    </BrowserRouter>
   );
 }

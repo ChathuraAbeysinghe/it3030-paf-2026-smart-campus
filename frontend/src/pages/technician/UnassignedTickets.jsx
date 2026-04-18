@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ticketService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { ticketService } from '../../services/ticketService';
 import GlassTable from '../../components/GlassTable';
 import StatusBadge from '../../components/StatusBadge';
 import SLATimer from '../../components/SLATimer';
@@ -8,6 +9,7 @@ import SLATimer from '../../components/SLATimer';
  * Technician — Unassigned ticket queue with "Assign to Me".
  */
 export default function UnassignedTickets() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => { load(); }, []);
@@ -20,7 +22,8 @@ export default function UnassignedTickets() {
   };
 
   const handleAssign = async (id) => {
-    await ticketService.assign(id, 'tech1', 'Current Technician');
+    if (!user?.id) return;
+    await ticketService.assign(id, user.id);
     setTickets(prev => prev.filter(t => t.id !== id));
   };
 

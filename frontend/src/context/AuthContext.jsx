@@ -4,12 +4,45 @@ import axios from 'axios';
 const AuthContext = createContext(null);
 
 const API_BASE = 'http://localhost:8081';
+const AUTH_MODE_KEY = 'smartcampus_auth_mode';
+
+function getAuthMode() {
+  return localStorage.getItem(AUTH_MODE_KEY) || '';
+}
 
 // Axios with credentials (session cookies)
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// ── Interceptor for Unauthorized access ──
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const token = localStorage.getItem('token');
+      const authMode = getAuthMode();
+      // Only force logout for authenticated backend sessions.
+      if (token || authMode === 'backend') {
+        localStorage.removeItem('token');
+        localStorage.removeItem(AUTH_MODE_KEY);
+        localStorage.removeItem('smartcampus_user');
+        window.dispatchEvent(new Event('auth-logout'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ── Mock Staff Credentials (Admin & Technician bypass) ────────────────────
 // These work even when the backend is not set up for these roles.
@@ -35,28 +68,45 @@ function checkStaffCredential(email, password) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
+  // Initialize user from localStorage synchronously to prevent flash
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('smartcampus_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   // Attempt to restore session on mount
   useEffect(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem('smartcampus_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    const handleLogout = () => setUser(null);
+    window.addEventListener('auth-logout', handleLogout);
+    
     fetchUser();
+    
+    return () => window.removeEventListener('auth-logout', handleLogout);
   }, []);
 
   const fetchUser = async () => {
+    const token = localStorage.getItem('token');
+    const stored = localStorage.getItem('smartcampus_user');
+    const authMode = getAuthMode();
+    // Local/mock sessions do not have backend token; avoid /me 401 noise.
+    if (!token && stored && authMode === 'local') {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data } = await api.get('/api/user/me');
       setUser(data);
       localStorage.setItem('smartcampus_user', JSON.stringify(data));
     } catch {
       // Keep localStorage data if API fails (e.g., manual login)
-      const stored = localStorage.getItem('smartcampus_user');
-      if (!stored) setUser(null);
+      const latestStored = localStorage.getItem('smartcampus_user');
+      if (!latestStored) setUser(null);
     } finally {
       setLoading(false);
     }
@@ -67,18 +117,40 @@ export function AuthProvider({ children }) {
   };
 
   const loginManual = async (email, password) => {
-    // ── Check mock staff credentials first ──
-    const staffUser = checkStaffCredential(email.trim(), password);
-    if (staffUser) {
-      setUser(staffUser);
-      localStorage.setItem('smartcampus_user', JSON.stringify(staffUser));
-      return staffUser;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+
+    try {
+      const { data } = await api.post('/api/auth/login', { email: normalizedEmail, password });
+      const authenticatedUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        picture: data.picture,
+        role: data.role,
+      };
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      } else {
+        localStorage.removeItem('token');
+      }
+      localStorage.setItem(AUTH_MODE_KEY, 'backend');
+
+      setUser(authenticatedUser);
+      localStorage.setItem('smartcampus_user', JSON.stringify(authenticatedUser));
+      return authenticatedUser;
+    } catch (error) {
+      // Fallback for local mock staff accounts when backend auth is unavailable/unauthorized.
+      const fallbackStaff = checkStaffCredential(normalizedEmail, password);
+      if (fallbackStaff) {
+        localStorage.removeItem('token');
+        localStorage.setItem(AUTH_MODE_KEY, 'local');
+        setUser(fallbackStaff);
+        localStorage.setItem('smartcampus_user', JSON.stringify(fallbackStaff));
+        return fallbackStaff;
+      }
+      throw error;
     }
-    // ── Otherwise hit the real backend API ──
-    const { data } = await api.post('/api/auth/login', { email, password });
-    setUser(data);
-    localStorage.setItem('smartcampus_user', JSON.stringify(data));
-    return data;
   };
 
   const register = async (name, itNumber, faculty, email, password) => {
@@ -114,6 +186,8 @@ export function AuthProvider({ children }) {
       await api.post('/api/auth/logout');
     } finally {
       setUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem(AUTH_MODE_KEY);
       localStorage.removeItem('smartcampus_user');
       window.location.href = '/';
     }
