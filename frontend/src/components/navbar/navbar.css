@@ -270,6 +270,30 @@
   color: #FFFFFF;
   position: relative;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.auth-notification__trigger:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.auth-notification__trigger:active {
+  transform: translateY(1px);
+}
+
+.auth-notification__trigger:focus-visible {
+  outline: 2px solid #F5A623;
+  outline-offset: 2px;
+}
+
+.auth-notification__trigger svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .auth-notification__icon {

@@ -5,7 +5,6 @@ const TABS = [
   { to: '/resources', label: 'Resources', symbol: 'R' },
   { to: '/my-bookings', label: 'Bookings', symbol: 'B' },
   { to: '/my-tickets', label: 'Tickets', symbol: 'T' },
-  { to: '/notifications', label: 'Alerts', symbol: 'N' },
   { to: '/profile', label: 'Profile', symbol: 'P' },
 ];
 

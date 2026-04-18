@@ -426,4 +426,16 @@ export const userService = {
     try { return (await api.get('/api/user/technicians')).data; }
     catch { return [...mockTechnicians]; }
   },
+  getAssignableStaff: async () => {
+    try {
+      const users = (await api.get('/api/users')).data;
+      return (Array.isArray(users) ? users : []).filter((u) => {
+        const role = String(u?.role || '').toUpperCase();
+        return (role === 'TECHNICIAN' || role === 'ADMIN') && u?.active !== false;
+      });
+    } catch {
+      return [...mockTechnicians, ...mockUsers.filter(u => String(u?.role || '').toUpperCase() === 'ADMIN')]
+        .filter(u => u?.active !== false);
+    }
+  },
 };

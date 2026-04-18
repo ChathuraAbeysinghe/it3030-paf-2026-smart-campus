@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Send, Edit2, Trash2 } from 'lucide-react';
 
 /**
  * Conversation thread with 4 message types:
@@ -40,21 +41,19 @@ export default function ConversationThread({
     setEditText('');
   };
 
-  const roleColors = {
-    USER: '#818CF8',
-    ADMIN: '#F87171',
-    TECHNICIAN: '#FBBF24',
-    SYSTEM: '#6B7280',
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.substring(0, 2).toUpperCase();
   };
 
   return (
-    <div className="conversation-thread">
-      <div className="thread-messages">
+    <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {comments.map(c => {
           if (c.isDeleted && c.messageType === 'TEXT') {
             return (
-              <div key={c.id} className="msg-deleted">
-                <span className="msg-deleted-text">{c.message}</span>
+              <div key={c.id} className="text-center my-2">
+                <span className="text-xs text-slate-400 italic">This message was deleted.</span>
               </div>
             );
           }
@@ -62,10 +61,10 @@ export default function ConversationThread({
           // SYSTEM messages
           if (c.messageType === 'SYSTEM') {
             return (
-              <div key={c.id} className="msg-system">
-                <div className="msg-system-line" />
-                <span className="msg-system-text">{c.message}</span>
-                <div className="msg-system-line" />
+              <div key={c.id} className="flex justify-center my-4">
+                <span className="bg-slate-100 rounded-full px-4 py-1.5 text-xs text-slate-500 italic">
+                  {c.message}
+                </span>
               </div>
             );
           }
@@ -73,10 +72,12 @@ export default function ConversationThread({
           // RESOLUTION_NOTE
           if (c.messageType === 'RESOLUTION_NOTE') {
             return (
-              <div key={c.id} className="msg-resolution">
-                <div className="msg-resolution-label">✓ Resolution Note</div>
-                <div className="msg-resolution-sender">{c.senderName} · {formatTime(c.timestamp)}</div>
-                <div className="msg-resolution-text">{c.message}</div>
+              <div key={c.id} className="flex justify-center my-4">
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-3 max-w-sm w-full text-center">
+                  <div className="text-green-700 text-xs font-bold uppercase tracking-wider mb-1">✓ Resolution Note</div>
+                  <div className="text-xs text-green-600 mb-2">{c.senderName} · {formatTime(c.timestamp)}</div>
+                  <div className="text-sm text-green-800">{c.message}</div>
+                </div>
               </div>
             );
           }
@@ -84,10 +85,12 @@ export default function ConversationThread({
           // DISPUTE_NOTE
           if (c.messageType === 'DISPUTE_NOTE') {
             return (
-              <div key={c.id} className="msg-dispute">
-                <div className="msg-dispute-label">⚠ User Disputed Resolution</div>
-                <div className="msg-dispute-sender">{c.senderName} · {formatTime(c.timestamp)}</div>
-                <div className="msg-dispute-text">{c.message}</div>
+              <div key={c.id} className="flex justify-center my-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 max-w-sm w-full text-center">
+                  <div className="text-amber-700 text-xs font-bold uppercase tracking-wider mb-1">User Disputed Resolution</div>
+                  <div className="text-xs text-amber-600 mb-2">{c.senderName} · {formatTime(c.timestamp)}</div>
+                  <div className="text-sm text-amber-800">{c.message}</div>
+                </div>
               </div>
             );
           }
@@ -96,44 +99,58 @@ export default function ConversationThread({
           const isOwn = c.senderId === currentUserId;
 
           return (
-            <div key={c.id} className={`msg-bubble-wrapper ${isOwn ? 'msg-own' : 'msg-other'}`}>
+            <div key={c.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
               {!isOwn && (
-                <div className="msg-sender-info">
-                  <span className="msg-sender-name">{c.senderName}</span>
-                  <span className="msg-role-badge" style={{
-                    color: roleColors[c.senderRole] || '#9CA3AF',
-                    background: `${roleColors[c.senderRole] || '#9CA3AF'}20`,
-                  }}>
-                    {c.senderRole}
-                  </span>
+                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mr-3 mt-1 shrink-0">
+                  {getInitials(c.senderName)}
                 </div>
               )}
-              <div className={`msg-bubble ${isOwn ? 'msg-bubble-own' : 'msg-bubble-other'}`}>
-                {editingId === c.id ? (
-                  <div className="msg-edit-area">
-                    <textarea value={editText} onChange={e => setEditText(e.target.value)}
-                      className="msg-edit-input" rows={2} />
-                    <div className="msg-edit-actions">
-                      <button className="msg-edit-btn" onClick={() => saveEdit(c)}>Save</button>
-                      <button className="msg-edit-btn msg-edit-cancel" onClick={() => setEditingId(null)}>Cancel</button>
+              
+              <div className={`max-w-[75%] ${isOwn ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
+                <div className={`text-xs mb-1 ${isOwn ? 'text-slate-400' : 'text-slate-500 font-medium'}`}>
+                  {!isOwn && (
+                    <span className="mr-2">
+                      {c.senderName}
+                      {(c.senderRole === 'TECHNICIAN' || c.senderRole === 'ADMIN') && (
+                        <span className="ml-2 bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider">
+                          {c.senderRole}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {isOwn && <span className="mr-2 text-slate-400">{formatTime(c.timestamp)}</span>}
+                  {!isOwn && <span className="font-normal text-slate-400">{formatTime(c.timestamp)}</span>}
+                </div>
+
+                <div className={`relative group ${isOwn ? 'bg-indigo-600 text-white rounded-2xl rounded-br-sm' : 'bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm'} px-4 py-2.5 text-sm`}>
+                  {editingId === c.id ? (
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)}
+                        className="w-full bg-white/20 text-white placeholder-white/50 border border-white/30 rounded p-2 text-sm outline-none resize-none" rows={2} />
+                      <div className="flex justify-end gap-2">
+                        <button className="text-xs bg-white text-indigo-600 px-2 py-1 rounded font-medium" onClick={() => saveEdit(c)}>Save</button>
+                        <button className="text-xs border border-white/50 text-white px-2 py-1 rounded" onClick={() => setEditingId(null)}>Cancel</button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="msg-text">{c.message}</div>
-                    <div className="msg-meta">
-                      <span className="msg-time">{formatTime(c.timestamp)}</span>
-                      {c.isEdited && <span className="msg-edited">(edited)</span>}
+                  ) : (
+                    <>
+                      <div className="whitespace-pre-wrap">{c.message}</div>
+                      {c.isEdited && <div className={`text-[10px] mt-1 ${isOwn ? 'text-white/70' : 'text-slate-400'}`}>(edited)</div>}
+                    </>
+                  )}
+
+                  {/* Hover actions for own messages */}
+                  {isOwn && !editingId && (
+                    <div className="absolute top-1/2 -left-12 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                      <button className="text-slate-400 hover:text-indigo-600 p-1 bg-white rounded shadow-sm border border-slate-100" onClick={() => startEdit(c)} title="Edit">
+                        <Edit2 size={12} />
+                      </button>
+                      <button className="text-slate-400 hover:text-red-600 p-1 bg-white rounded shadow-sm border border-slate-100" onClick={() => onDelete?.(c.id)} title="Delete">
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-                  </>
-                )}
-                {/* Hover actions for own messages */}
-                {isOwn && !editingId && (
-                  <div className="msg-actions">
-                    <button className="msg-action-btn" onClick={() => startEdit(c)} title="Edit">✏️</button>
-                    <button className="msg-action-btn" onClick={() => onDelete?.(c.id)} title="Delete">🗑️</button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -142,21 +159,20 @@ export default function ConversationThread({
       </div>
 
       {/* Message input */}
-      <div className="thread-input-area">
-        <textarea
-          className="thread-input"
+      <div className="mt-4 flex gap-2 w-full pt-4 border-t border-slate-100">
+        <input
+          className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm flex-1 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
           placeholder="Type a message..."
           value={message}
           onChange={e => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          rows={1}
         />
         <button
-          className="thread-send-btn"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2.5 transition duration-150 disabled:opacity-50 flex items-center justify-center shrink-0 cursor-pointer"
           onClick={handleSend}
           disabled={!message.trim() || sending}
         >
-          {sending ? '...' : '➤'}
+          {sending ? <span className="animate-pulse w-[18px] h-[18px] block rounded-full border-2 border-white/30 border-t-white"></span> : <Send size={18} strokeWidth={2.5} />}
         </button>
       </div>
     </div>

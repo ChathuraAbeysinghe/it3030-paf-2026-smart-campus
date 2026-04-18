@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './profile.css';
@@ -11,6 +11,7 @@ import './modern-pages.css';
 export default function Profile() {
   const navigate = useNavigate();
   const { user, logout, changePassword } = useAuth();
+  const userRole = user?.role ?? 'USER';
 
   const profileRouteByRole = {
     ADMIN: '/admin/profile',
@@ -21,23 +22,6 @@ export default function Profile() {
   const [form, setForm] = useState({ current: '', newPass: '', confirm: '' });
   const [pwStatus, setPwStatus] = useState({ msg: '', type: '' });
   const [saving, setSaving] = useState(false);
-
-  const [editMode, setEditMode] = useState(false);
-  const [profile, setProfile] = useState({
-    phone: '',
-    year: '',
-    degree: '',
-  });
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`profile_ext_${user?.email}`);
-    if (saved) setProfile(JSON.parse(saved));
-  }, [user?.email]);
-
-  const handleSaveProfile = () => {
-    localStorage.setItem(`profile_ext_${user?.email}`, JSON.stringify(profile));
-    setEditMode(false);
-  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -76,8 +60,13 @@ export default function Profile() {
     { icon: '🛠️', value: 1, label: 'In Progress', color: '#818CF8' },
   ];
 
-  const itNumber = user?.itNumber || user?.email?.split('@')[0]?.toUpperCase() || 'N/A';
-  const faculty = user?.faculty || 'Faculty of Computing';
+  const accountTypeByRole = {
+    ADMIN: 'Staff Account',
+    TECHNICIAN: 'Technical Account',
+    USER: 'Student Account',
+  };
+  const accountType = accountTypeByRole[userRole] ?? 'Campus Account';
+  const loginMethod = user?.email?.includes('@sliit.lk') ? 'SLIIT Email' : 'Campus Login';
   const joinDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   const currentYear = new Date().getFullYear();
 
@@ -109,7 +98,7 @@ export default function Profile() {
                 <span className="vid-uni">SLIIT</span>
                 <span className="vid-label">Smart Campus</span>
               </div>
-              <div className="vid-badge-type">Student ID</div>
+              <div className="vid-badge-type">{accountType}</div>
             </div>
 
             <div className="vid-body">
@@ -123,8 +112,8 @@ export default function Profile() {
 
               <div className="vid-info">
                 <div className="vid-name">{user?.name || 'Student'}</div>
-                <div className="vid-id">{itNumber}</div>
-                <div className="vid-faculty">{faculty}</div>
+                <div className="vid-id" style={{ fontSize: '0.8rem', fontWeight: 600, marginTop: 2 }}>{userRole}</div>
+                <div className="vid-faculty">{loginMethod}</div>
               </div>
             </div>
 
@@ -143,40 +132,17 @@ export default function Profile() {
           <div className="glass-card profile-details-card">
             <div className="profile-details-header">
               <h3>Personal Information</h3>
-              {!editMode ? (
-                <button className="btn-sm btn-sm--primary" onClick={() => setEditMode(true)}>
-                  Edit
-                </button>
-              ) : (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn-sm btn-sm--success" onClick={handleSaveProfile}>Save</button>
-                  <button className="btn-sm btn-sm--danger" onClick={() => setEditMode(false)}>Cancel</button>
-                </div>
-              )}
+              <span className="role-badge" style={{ color: '#1B2A4A', borderColor: '#E2E8F0', background: '#F8FAFC' }}>
+                {accountType}
+              </span>
             </div>
 
             <div className="profile-detail-grid">
-              <div className="profile-detail-item profile-detail--locked">
-                <div className="profile-detail-icon">ID</div>
-                <div>
-                  <div className="profile-detail-label">Student ID</div>
-                  <div className="profile-detail-value">{itNumber}</div>
-                </div>
-              </div>
-
               <div className="profile-detail-item profile-detail--locked">
                 <div className="profile-detail-icon">@</div>
                 <div>
                   <div className="profile-detail-label">Email</div>
                   <div className="profile-detail-value">{user?.email}</div>
-                </div>
-              </div>
-
-              <div className="profile-detail-item profile-detail--locked">
-                <div className="profile-detail-icon">F</div>
-                <div>
-                  <div className="profile-detail-label">Faculty</div>
-                  <div className="profile-detail-value">{faculty}</div>
                 </div>
               </div>
 
@@ -190,61 +156,11 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="profile-detail-item">
-                <div className="profile-detail-icon">P</div>
-                <div style={{ flex: 1 }}>
-                  <div className="profile-detail-label">Phone Number</div>
-                  {editMode ? (
-                    <input
-                      type="tel"
-                      className="profile-edit-input"
-                      value={profile.phone}
-                      onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
-                      placeholder="+94 XX XXX XXXX"
-                    />
-                  ) : (
-                    <div className="profile-detail-value">{profile.phone || '-'} </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="profile-detail-item">
-                <div className="profile-detail-icon">D</div>
-                <div style={{ flex: 1 }}>
-                  <div className="profile-detail-label">Degree Program</div>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      className="profile-edit-input"
-                      value={profile.degree}
-                      onChange={(e) => setProfile((p) => ({ ...p, degree: e.target.value }))}
-                      placeholder="BSc (Hons) in IT"
-                    />
-                  ) : (
-                    <div className="profile-detail-value">{profile.degree || '-'} </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="profile-detail-item">
-                <div className="profile-detail-icon">Y</div>
-                <div style={{ flex: 1 }}>
-                  <div className="profile-detail-label">Year of Study</div>
-                  {editMode ? (
-                    <select
-                      className="profile-edit-input"
-                      value={profile.year}
-                      onChange={(e) => setProfile((p) => ({ ...p, year: e.target.value }))}
-                    >
-                      <option value="">Select year</option>
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                    </select>
-                  ) : (
-                    <div className="profile-detail-value">{profile.year || '-'}</div>
-                  )}
+              <div className="profile-detail-item profile-detail--locked">
+                <div className="profile-detail-icon">N</div>
+                <div>
+                  <div className="profile-detail-label">Name</div>
+                  <div className="profile-detail-value">{user?.name || '-'}</div>
                 </div>
               </div>
 
@@ -255,6 +171,22 @@ export default function Profile() {
                   <div className="profile-detail-value">{joinDate}</div>
                 </div>
               </div>
+
+              <div className="profile-detail-item profile-detail--locked">
+                <div className="profile-detail-icon">S</div>
+                <div>
+                  <div className="profile-detail-label">Session Type</div>
+                  <div className="profile-detail-value">{loginMethod}</div>
+                </div>
+              </div>
+
+              <div className="profile-detail-item profile-detail--locked">
+                <div className="profile-detail-icon">V</div>
+                <div>
+                  <div className="profile-detail-label">Profile Valid</div>
+                  <div className="profile-detail-value">{currentYear} - {currentYear + 1}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -263,7 +195,7 @@ export default function Profile() {
           <div className="glass-card profile-panel" style={{ padding: 28 }}>
             <h3 style={{ marginBottom: 6 }}>Change Password</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 20 }}>
-              {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN')
+              {(userRole === 'ADMIN' || userRole === 'TECHNICIAN')
                 ? 'Update your staff account password. Changes apply immediately.'
                 : 'Update your account password.'}
             </p>

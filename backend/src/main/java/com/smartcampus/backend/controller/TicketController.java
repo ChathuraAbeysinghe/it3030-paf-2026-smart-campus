@@ -99,6 +99,20 @@ public class TicketController {
     }
 
     /**
+     * Update editable fields of a ticket (creator, OPEN tickets only).
+     */
+    @PatchMapping("/{id}")
+    public TicketResponse updateTicket(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateTicketRequest request,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest httpRequest) {
+
+        User actor = currentUserService.resolveCurrentUser(principal, httpRequest);
+        return ticketService.updateTicket(id, actor, request);
+    }
+
+    /**
      * Update ticket status.
      */
     @PutMapping("/{id}/status")
@@ -151,6 +165,20 @@ public class TicketController {
 
         User actor = currentUserService.resolveCurrentUser(principal, httpRequest);
         return ticketService.disputeResolution(id, actor, request);
+    }
+
+    /**
+     * User cancels own OPEN ticket before assignment.
+     */
+    @PostMapping("/{id}/cancel")
+    public TicketResponse cancelTicket(
+            @PathVariable String id,
+            @RequestBody(required = false) CancelTicketRequest request,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest httpRequest) {
+
+        User actor = currentUserService.resolveCurrentUser(principal, httpRequest);
+        return ticketService.cancelTicket(id, actor, request);
     }
 
     /**

@@ -35,8 +35,8 @@ export default function ManageTickets() {
       setTickets(allTickets);
       setStats(statsData);
 
-      // Fetch technicians
-      const techs = await userService.getTechnicians();
+      // Fetch assignable staff (technicians + admins)
+      const techs = await userService.getAssignableStaff();
       setTechnicians(techs);
 
     } catch { toast.error('Failed to load tickets'); }
@@ -47,7 +47,7 @@ export default function ManageTickets() {
     e.stopPropagation();
     try {
       await ticketService.assign(ticketId, techId);
-      toast.success('Technician assigned!');
+      toast.success('Staff assigned!');
       await loadData();
     } catch { toast.error('Failed to assign'); }
   }
@@ -184,9 +184,9 @@ export default function ManageTickets() {
                         onChange={e => handleAssign(ticket.id, e.target.value, e)}
                       >
                         <option value="" disabled>Assign...</option>
-                        {technicians.filter(t => t.active).map(tech => (
+                        {technicians.filter(t => t.active !== false).map(tech => (
                           <option key={tech.id} value={tech.id}>
-                            {tech.name} ({tech.assignedTickets || 0})
+                            {tech.name} ({tech.role || 'STAFF'})
                           </option>
                         ))}
                       </select>

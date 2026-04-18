@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
  */
 export default function UserLayout() {
   const location = useLocation();
-  const modernRoutes = ['/dashboard', '/resources', '/my-bookings', '/my-tickets', '/notifications', '/profile'];
+  const modernRoutes = ['/dashboard', '/resources', '/my-bookings', '/my-tickets', '/profile'];
   const isModernRoute = modernRoutes.includes(location.pathname);
 
   return (

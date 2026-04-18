@@ -6,7 +6,6 @@ const NAV_ITEMS = [
   { to: '/technician/dashboard',  icon: '📊', label: 'Dashboard'  },
   { to: '/technician/assigned',   icon: '🔧', label: 'My Tickets' },
   { to: '/technician/unassigned', icon: '📋', label: 'Unassigned' },
-  { to: '/technician/notifications', icon: '🔔', label: 'Notifications' },
 ];
 
 export default function TechnicianLayout() {

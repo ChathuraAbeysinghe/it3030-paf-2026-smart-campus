@@ -116,6 +116,40 @@ public class TicketService {
 
     // ── UPDATE STATUS ──
 
+    public TicketResponse updateTicket(String ticketId, User actor, UpdateTicketRequest request) {
+        Ticket ticket = findTicketOrThrow(ticketId);
+
+        if (!Objects.equals(ticket.getCreatedBy(), actor.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the ticket creator can edit this ticket");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only OPEN tickets can be edited");
+        }
+
+        ticket.setTitle(request.getTitle().trim());
+        ticket.setDescription(request.getDescription().trim());
+        ticket.setLocation(request.getLocation().trim());
+        ticket.setPriority(TicketPriority.valueOf(request.getPriority()));
+        ticket.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        ticket.setSlaDeadline(slaService.calculateDeadline(ticket.getPriority(), ticket.getCreatedAt()));
+        ticket.setSlaStatus(slaService.evaluateSla(ticket));
+        ticket.setUpdatedAt(Instant.now());
+
+        Ticket saved = ticketRepository.save(ticket);
+
+        timelineService.record(saved.getId(), actor.getId(), actor.getName(),
+                actor.getRole().name(), EventType.STATUS_CHANGED,
+                "Ticket details updated by " + actor.getName(),
+                Map.of("action", "TICKET_EDITED"));
+
+        commentService.addSystemComment(saved.getId(),
+                "✏ Ticket details updated by " + actor.getName());
+
+        return TicketResponse.from(saved);
+    }
+
     public TicketResponse updateStatus(String ticketId, User actor, UpdateStatusRequest request) {
         Ticket ticket = findTicketOrThrow(ticketId);
         TicketStatus newStatus = TicketStatus.valueOf(request.getStatus());
@@ -182,6 +216,43 @@ public class TicketService {
                     "Ticket " + saved.getTicketId() + " status updated",
                     "Status changed to " + newStatus, saved.getId());
         }
+
+        return TicketResponse.from(saved);
+    }
+
+    public TicketResponse cancelTicket(String ticketId, User actor, CancelTicketRequest request) {
+        Ticket ticket = findTicketOrThrow(ticketId);
+
+        if (!Objects.equals(ticket.getCreatedBy(), actor.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the ticket creator can cancel this ticket");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only OPEN tickets can be cancelled");
+        }
+        if (ticket.getAssignedTechnician() != null && !ticket.getAssignedTechnician().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Assigned tickets cannot be cancelled");
+        }
+
+        String reason = (request != null && request.getReason() != null) ? request.getReason().trim() : "";
+        ticket.setStatus(TicketStatus.REJECTED);
+        ticket.setRejectionReason(reason.isBlank() ? "Cancelled by user" : "Cancelled by user: " + reason);
+        ticket.setClosedAt(Instant.now());
+        ticket.setUpdatedAt(Instant.now());
+        ticket.setSlaStatus(slaService.evaluateSla(ticket));
+
+        Ticket saved = ticketRepository.save(ticket);
+
+        timelineService.record(saved.getId(), actor.getId(), actor.getName(),
+                actor.getRole().name(), EventType.STATUS_CHANGED,
+                "Ticket cancelled by " + actor.getName(),
+                Map.of("fromStatus", TicketStatus.OPEN.name(), "toStatus", TicketStatus.REJECTED.name()));
+
+        commentService.addSystemComment(saved.getId(),
+                "🛑 Ticket cancelled by " + actor.getName() +
+                        (reason.isBlank() ? "" : ": " + reason));
 
         return TicketResponse.from(saved);
     }

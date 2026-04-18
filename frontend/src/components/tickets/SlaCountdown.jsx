@@ -18,25 +18,30 @@ export default function SlaCountdown({ slaDeadline, slaStatus, totalPausedDurati
       const deadline = new Date(slaDeadline).getTime();
       const diff = deadline - now + (totalPausedDuration * 1000);
 
+      const h = Math.floor(Math.abs(diff) / 3600000);
+      const m = Math.floor((Math.abs(diff) % 3600000) / 60000);
+
       if (diff <= 0) {
-        const overdue = Math.abs(diff);
-        const h = Math.floor(overdue / 3600000);
-        const m = Math.floor((overdue % 3600000) / 60000);
-        setRemaining(`OVERDUE ${h}h ${m}m`);
+        setRemaining(`OVERDUE`);
         setStatus('BREACHED');
         setPercent(100);
       } else {
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
         setRemaining(`${h}h ${m}m left`);
 
-        // Calculate percent elapsed
-        // We don't have createdAt here easily, so just use remaining vs a rough total
+        // Rough calculation for percent if original start time is missing
         const totalMs = deadline - (deadline - diff - totalPausedDuration * 1000);
         const pct = totalMs > 0 ? Math.max(0, Math.min(100, ((totalMs - diff) / totalMs) * 100)) : 0;
-        setPercent(pct);
+        
+        // For visual sake, let's derive percent from hours left if < 4
+        let visualPct = 0;
+        if (h >= 4) visualPct = 25;
+        else if (h >= 2) visualPct = 50;
+        else if (h >= 1) visualPct = 75;
+        else visualPct = 90;
 
-        if (pct >= 75) setStatus('AT_RISK');
+        setPercent(visualPct);
+
+        if (h < 2) setStatus('AT_RISK');
         else setStatus('WITHIN_SLA');
       }
     }
@@ -46,45 +51,30 @@ export default function SlaCountdown({ slaDeadline, slaStatus, totalPausedDurati
     return () => clearInterval(timer);
   }, [slaDeadline, slaStatus, totalPausedDuration]);
 
-  // Override with prop if provided
   const displayStatus = slaStatus || status;
-
-  const statusColors = {
-    WITHIN_SLA: { color: '#10B981', bg: 'rgba(16,185,129,0.15)' },
-    AT_RISK:    { color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
-    BREACHED:   { color: '#EF4444', bg: 'rgba(239,68,68,0.15)' },
-    PAUSED:     { color: '#6B7280', bg: 'rgba(107,114,128,0.15)' },
-  };
-
-  const cfg = statusColors[displayStatus] || statusColors.WITHIN_SLA;
 
   if (compact) {
     return (
-      <span className={`sla-pill sla-${displayStatus.toLowerCase()}`} style={{
-        color: cfg.color, background: cfg.bg,
-        border: `1px solid ${cfg.color}33`,
-      }}>
-        ⏱ {remaining}
+      <span className="text-sm font-medium">
+        {remaining}
       </span>
     );
   }
 
   return (
-    <div className="sla-countdown">
-      <div className="sla-header">
-        <span className="sla-label" style={{ color: cfg.color }}>
-          ⏱ {remaining}
-        </span>
-        <span className={`sla-status-text sla-${displayStatus.toLowerCase()}`}>
-          {displayStatus === 'WITHIN_SLA' ? 'Within SLA' :
-           displayStatus === 'AT_RISK' ? 'At Risk' :
-           displayStatus === 'BREACHED' ? 'SLA Breached' :
-           'SLA Paused'}
+    <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">SLA STATUS</div>
+      <div className={`text-2xl font-bold mb-2 ${displayStatus === 'WITHIN_SLA' ? 'text-green-600' : displayStatus === 'AT_RISK' ? 'text-amber-600 animate-pulse' : 'text-red-600'}`}>
+        {remaining}
+      </div>
+      <div className="mb-4">
+        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${displayStatus === 'WITHIN_SLA' ? 'bg-green-100 text-green-700' : displayStatus === 'AT_RISK' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+          {displayStatus === 'WITHIN_SLA' ? 'WITHIN SLA' : displayStatus === 'AT_RISK' ? 'AT RISK' : 'BREACHED'}
         </span>
       </div>
-      <div className="sla-bar-track">
-        <div
-          className={`sla-bar-fill sla-bar-${displayStatus.toLowerCase()}`}
+      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+        <div 
+          className={`h-full rounded-full ${displayStatus === 'WITHIN_SLA' ? 'bg-green-500' : displayStatus === 'AT_RISK' ? 'bg-amber-500' : 'bg-red-500'}`}
           style={{ width: `${Math.min(percent, 100)}%` }}
         />
       </div>
