@@ -11,6 +11,7 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends MongoRepository<Booking, String> {
+
     List<Booking> findAllByOrderByCreatedAtDesc();
 
     List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);
@@ -20,5 +21,7 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findByUserIdAndStatusOrderByCreatedAtDesc(String userId, BookingStatus status);
 
     List<Booking> findByFacilityIdAndDateAndStatusIn(String facilityId, LocalDate date, Collection<BookingStatus> statuses);
-}
 
+    // Used by the auto-cancel scheduler to find all approved bookings
+    List<Booking> findByStatus(BookingStatus status);
+}

@@ -34,6 +34,10 @@ public class BookingResponse {
     private String adminNotes;
     private String qrCode;
 
+    // QR Check-in fields
+    private Boolean checkedIn;
+    private Instant checkedInAt;
+
     private Instant createdAt;
     private Instant updatedAt;
 }

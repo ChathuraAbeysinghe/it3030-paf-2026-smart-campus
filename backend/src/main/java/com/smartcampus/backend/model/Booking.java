@@ -38,8 +38,20 @@ public class Booking {
     private BookingType bookingType = BookingType.BOOKING;
 
     private String adminNotes;
-
     private String qrCode;
+
+    /**
+     * Whether the user has physically checked in using the QR code.
+     * Remains false until the user checks in within the 15-minute window.
+     */
+    @Builder.Default
+    private Boolean checkedIn = false;
+
+    /**
+     * Timestamp when the user successfully checked in.
+     * Null if not yet checked in.
+     */
+    private Instant checkedInAt;
 
     private Instant createdAt;
     private Instant updatedAt;
