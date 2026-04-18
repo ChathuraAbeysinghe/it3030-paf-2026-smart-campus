@@ -98,6 +98,8 @@ public class BookingService {
                 .expectedAttendees(request.getAttendees())
                 .status(BookingStatus.PENDING)
                 .bookingType(bookingType)
+                .checkedIn(false)
+                .checkedInAt(null)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -225,6 +227,8 @@ public class BookingService {
                 .toList();
     }
 
+    // ── Private helpers ──────────────────────────────────────────
+
     private void validateCapacity(int attendees, Resource facility) {
         if (facility.getCapacity() != null && attendees > facility.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -313,6 +317,8 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
+    // ── toResponse overloads ─────────────────────────────────────
+
     private BookingResponse toResponse(
             Booking booking,
             Map<String, Resource> facilityMap,
@@ -339,6 +345,8 @@ public class BookingService {
                 .bookingType(booking.getBookingType())
                 .adminNotes(booking.getAdminNotes())
                 .qrCode(booking.getQrCode())
+                .checkedIn(booking.getCheckedIn() != null ? booking.getCheckedIn() : false)
+                .checkedInAt(booking.getCheckedInAt())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();
@@ -368,6 +376,8 @@ public class BookingService {
                 .bookingType(booking.getBookingType())
                 .adminNotes(booking.getAdminNotes())
                 .qrCode(booking.getQrCode())
+                .checkedIn(booking.getCheckedIn() != null ? booking.getCheckedIn() : false)
+                .checkedInAt(booking.getCheckedInAt())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();

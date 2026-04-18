@@ -38,7 +38,7 @@ public class BookingController {
     private final CurrentUserService currentUserService;
 
     /*
-     Get all bookings Admins see all bookings, users see only their own
+     Get all bookings — Admins see all bookings, users see only their own
      */
     @GetMapping
     public List<BookingResponse> getAll(
@@ -79,7 +79,7 @@ public class BookingController {
     }
 
     /*
-     Update an existing PENDING booking, owner and admin can
+     Update an existing PENDING booking — owner and admin can
      */
     @PutMapping("/{id}")
     public BookingResponse update(
@@ -93,7 +93,7 @@ public class BookingController {
     }
 
     /*
-     Approve a PENDING booking admin-only
+     Approve a PENDING booking — admin only
      */
     @PatchMapping("/{id}/approve")
     public BookingResponse approve(
@@ -107,8 +107,8 @@ public class BookingController {
         return bookingService.approve(actor, id, adminNotes);
     }
 
-    /**
-     * Reject a PENDING booking admin-only
+    /*
+     Reject a PENDING booking — admin only
      */
     @PatchMapping("/{id}/reject")
     public BookingResponse reject(
@@ -121,8 +121,8 @@ public class BookingController {
         return bookingService.reject(actor, id, body.getAdminNotes());
     }
 
-    /**
-     Cancel an APPROVED booking owner only
+    /*
+     Cancel an APPROVED booking — owner only (admin can also cancel)
      */
     @PatchMapping("/{id}/cancel")
     public BookingResponse cancel(
@@ -134,6 +134,9 @@ public class BookingController {
         return bookingService.cancel(actor, id);
     }
 
+    /*
+     Get facility conflicts for a given date (used by availability checker)
+     */
     @GetMapping("/facility/{facilityId}/conflicts")
     public List<BookingResponse> getFacilityConflicts(
             @PathVariable String facilityId,
