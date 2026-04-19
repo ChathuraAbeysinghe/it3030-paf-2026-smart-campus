@@ -1,13 +1,16 @@
 package com.smartcampus.backend.controller;
 
-import com.smartcampus.backend.model.Booking;
+import com.smartcampus.backend.dto.BookingDecisionRequest;
+import com.smartcampus.backend.dto.BookingRequest;
+import com.smartcampus.backend.dto.BookingResponse;
 import com.smartcampus.backend.model.BookingStatus;
-import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
-import com.smartcampus.backend.repository.BookingRepository;
+import com.smartcampus.backend.service.BookingService;
 import com.smartcampus.backend.service.CurrentUserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,222 +18,125 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Map;
+import java.util.List;
 
-/**
- * QR Check-in Controller
- *
- * POST /api/bookings/{id}/checkin         — validate QR and mark checked in
- * GET  /api/bookings/{id}/checkin-status  — get check-in status (triggers auto-cancel check)
- * POST /api/bookings/auto-cancel-expired  — admin bulk auto-cancel (also run by scheduler)
- *
- * Check-in rules:
- *   - Check-in window OPENS  15 minutes before start time
- *   - Check-in window CLOSES 15 minutes after  start time
- *   - If user does NOT check in within 15 minutes of start → CANCELLED automatically
- *   - Booking must be APPROVED and QR code must match
- */
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
-public class QRCheckinController {
+public class BookingController {
 
-    private final BookingRepository bookingRepository;
+    private final BookingService     bookingService;
     private final CurrentUserService currentUserService;
 
-    // ── POST /api/bookings/{id}/checkin ──────────────────────────
-
-    @PostMapping("/{id}/checkin")
-    public ResponseEntity<?> checkin(
-            @PathVariable String id,
-            @RequestBody Map<String, String> body,
+    @GetMapping
+    public List<BookingResponse> getAll(
             @AuthenticationPrincipal OAuth2User principal,
-            HttpServletRequest request) {
-
+            HttpServletRequest request,
+            @RequestParam(required = false) String status) {
         User actor = currentUserService.resolveCurrentUser(principal, request);
-
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
-
-        // Only the booking owner or an admin can check in
-        if (!booking.getUserId().equals(actor.getId()) && actor.getRole() != Role.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Not authorised to check in this booking");
-        }
-
-        // Must be APPROVED
-        if (booking.getStatus() != BookingStatus.APPROVED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Only APPROVED bookings can be checked in. Current status: " + booking.getStatus());
-        }
-
-        // Already checked in?
-        if (Boolean.TRUE.equals(booking.getCheckedIn())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "This booking has already been checked in.");
-        }
-
-        // Validate QR code
-        String providedQr = body.get("qrCode");
-        if (providedQr == null || !providedQr.trim().equals(booking.getQrCode())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid QR code");
-        }
-
-        // Must be booking date
-        LocalDate today = LocalDate.now();
-        if (!today.equals(booking.getDate())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Check-in is only allowed on the booking date (" + booking.getDate() + ")");
-        }
-
-        // Check-in time window: (startTime - 15min) to (startTime + 15min)
-        LocalTime now          = LocalTime.now();
-        LocalTime windowOpen   = booking.getStartTime().minusMinutes(15);
-        LocalTime windowClose  = booking.getStartTime().plusMinutes(15);
-
-        if (now.isBefore(windowOpen)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Check-in not yet open. Opens at " + windowOpen
-                            + " (15 minutes before start time " + booking.getStartTime() + ")");
-        }
-        if (now.isAfter(windowClose)) {
-            // Auto-cancel since the window has passed
-            booking.setStatus(BookingStatus.CANCELLED);
-            booking.setAdminNotes("Auto-cancelled: check-in window expired (15 minutes after start time)");
-            booking.setUpdatedAt(Instant.now());
-            bookingRepository.save(booking);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Check-in window has expired. The booking has been auto-cancelled.");
-        }
-
-        // All good — mark checked in
-        booking.setCheckedIn(true);
-        booking.setCheckedInAt(Instant.now());
-        booking.setUpdatedAt(Instant.now());
-        bookingRepository.save(booking);
-
-        return ResponseEntity.ok(Map.of(
-                "message",     "Check-in successful! Enjoy your booking.",
-                "bookingId",   booking.getId(),
-                "checkedInAt", booking.getCheckedInAt().toString(),
-                "facility",    booking.getFacilityId()
-        ));
+        return bookingService.getBookings(actor, parseStatus(status));
     }
 
-    // ── GET /api/bookings/{id}/checkin-status ────────────────────
-
-    @GetMapping("/{id}/checkin-status")
-    public ResponseEntity<?> checkinStatus(
+    @GetMapping("/{id}")
+    public BookingResponse getById(
             @PathVariable String id,
             @AuthenticationPrincipal OAuth2User principal,
             HttpServletRequest request) {
-
-        currentUserService.resolveCurrentUser(principal, request);
-
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
-
-        // Trigger auto-cancel check for this booking
-        boolean autoCancelled = false;
-        if (booking.getStatus() == BookingStatus.APPROVED
-                && !Boolean.TRUE.equals(booking.getCheckedIn())) {
-            autoCancelled = maybeAutoCancel(booking);
-        }
-
-        // Compute seconds remaining until auto-cancel deadline (for countdown)
-        Long secondsUntilDeadline = null;
-        if (booking.getStatus() == BookingStatus.APPROVED
-                && !Boolean.TRUE.equals(booking.getCheckedIn())
-                && booking.getDate() != null
-                && booking.getDate().equals(LocalDate.now())
-                && booking.getStartTime() != null) {
-
-            LocalTime deadline = booking.getStartTime().plusMinutes(15);
-            LocalTime now      = LocalTime.now();
-            if (now.isBefore(deadline)) {
-                secondsUntilDeadline = (long) (
-                        (deadline.toSecondOfDay() - now.toSecondOfDay())
-                );
-            }
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "bookingId",            booking.getId(),
-                "status",               booking.getStatus().name(),
-                "checkedIn",            Boolean.TRUE.equals(booking.getCheckedIn()),
-                "checkedInAt",          booking.getCheckedInAt() != null
-                                            ? booking.getCheckedInAt().toString() : "",
-                "autoCancelled",        autoCancelled,
-                "secondsUntilDeadline", secondsUntilDeadline != null ? secondsUntilDeadline : -1
-        ));
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.getById(actor, id);
     }
 
-    // ── POST /api/bookings/auto-cancel-expired (admin) ───────────
-
-    @PostMapping("/auto-cancel-expired")
-    public ResponseEntity<?> autoCancelExpired(
+    @PostMapping
+    public ResponseEntity<BookingResponse> create(
+            @Valid @RequestBody BookingRequest body,
             @AuthenticationPrincipal OAuth2User principal,
             HttpServletRequest request) {
-
         User actor = currentUserService.resolveCurrentUser(principal, request);
-        if (actor.getRole() != Role.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
-        }
-
-        var approvedBookings = bookingRepository.findByStatus(BookingStatus.APPROVED)
-                .stream()
-                .filter(b -> !Boolean.TRUE.equals(b.getCheckedIn()))
-                .toList();
-
-        long cancelledCount = approvedBookings.stream()
-                .filter(this::maybeAutoCancel)
-                .count();
-
-        return ResponseEntity.ok(Map.of(
-                "checked",   approvedBookings.size(),
-                "cancelled", cancelledCount,
-                "message",   cancelledCount + " expired booking(s) auto-cancelled"
-        ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.create(actor, body));
     }
 
-    // ── Private helper ───────────────────────────────────────────
+    @PutMapping("/{id}")
+    public BookingResponse update(
+            @PathVariable String id,
+            @Valid @RequestBody BookingRequest body,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.update(actor, id, body);
+    }
+
+    @PatchMapping("/{id}/approve")
+    public BookingResponse approve(
+            @PathVariable String id,
+            @RequestBody(required = false) BookingDecisionRequest body,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.approve(actor, id, body == null ? null : body.getAdminNotes());
+    }
+
+    @PatchMapping("/{id}/reject")
+    public BookingResponse reject(
+            @PathVariable String id,
+            @Valid @RequestBody BookingDecisionRequest body,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.reject(actor, id, body.getAdminNotes());
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public BookingResponse cancel(
+            @PathVariable String id,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.cancel(actor, id);
+    }
 
     /**
-     * Auto-cancels a booking if the 15-minute check-in window has expired.
-     * Returns true if the booking was cancelled.
+     * PATCH /api/bookings/{id}/checkin
+     * Admin scans QR → looks up booking by ID → marks checked in.
      */
-    private boolean maybeAutoCancel(Booking booking) {
-        if (booking.getDate() == null || booking.getStartTime() == null) return false;
-
-        LocalDate today = LocalDate.now();
-        LocalTime now   = LocalTime.now();
-
-        // Cancel if booking date is in the past (not today)
-        if (booking.getDate().isBefore(today)) {
-            doCancel(booking);
-            return true;
-        }
-
-        // Cancel if today and the 15-minute window has passed
-        if (booking.getDate().equals(today)) {
-            LocalTime deadline = booking.getStartTime().plusMinutes(15);
-            if (now.isAfter(deadline)) {
-                doCancel(booking);
-                return true;
-            }
-        }
-
-        return false;
+    @PatchMapping("/{id}/checkin")
+    public BookingResponse checkIn(
+            @PathVariable String id,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.checkIn(actor, id);
     }
 
-    private void doCancel(Booking booking) {
-        booking.setStatus(BookingStatus.CANCELLED);
-        booking.setAdminNotes(
-                "Auto-cancelled: no check-in within 15 minutes of start time (" + booking.getStartTime() + ")");
-        booking.setUpdatedAt(Instant.now());
-        bookingRepository.save(booking);
+    /**
+     * GET /api/bookings/qr/{qrCode}
+     * Admin scanner: look up booking by QR code string.
+     * Returns full booking details so admin can confirm before check-in.
+     */
+    @GetMapping("/qr/{qrCode}")
+    public BookingResponse getByQrCode(
+            @PathVariable String qrCode,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.getByQrCode(qrCode);
+    }
+
+    @GetMapping("/facility/{facilityId}/conflicts")
+    public List<BookingResponse> getFacilityConflicts(
+            @PathVariable String facilityId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        currentUserService.resolveCurrentUser(principal, request);
+        return bookingService.getFacilityConflicts(facilityId, date);
+    }
+
+    private BookingStatus parseStatus(String raw) {
+        if (raw == null || raw.isBlank() || "ALL".equalsIgnoreCase(raw.trim())) return null;
+        try { return BookingStatus.fromValue(raw); }
+        catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 }

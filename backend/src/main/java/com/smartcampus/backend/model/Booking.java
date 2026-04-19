@@ -40,18 +40,16 @@ public class Booking {
     private String adminNotes;
     private String qrCode;
 
-    /**
-     * Whether the user has physically checked in using the QR code.
-     * Remains false until the user checks in within the 15-minute window.
-     */
+    // ── Check-in fields ──────────────────────────────────────────
     @Builder.Default
-    private Boolean checkedIn = false;
+    private Boolean checkedIn = false;   // true once QR scanned
 
-    /**
-     * Timestamp when the user successfully checked in.
-     * Null if not yet checked in.
-     */
-    private Instant checkedInAt;
+    private Instant checkedInAt;         // timestamp of check-in
+    private String  checkedInBy;         // admin userId who scanned
+
+    // ── Auto-cancel tracking ─────────────────────────────────────
+    @Builder.Default
+    private boolean autoCancelled = false; // set by scheduler
 
     private Instant createdAt;
     private Instant updatedAt;

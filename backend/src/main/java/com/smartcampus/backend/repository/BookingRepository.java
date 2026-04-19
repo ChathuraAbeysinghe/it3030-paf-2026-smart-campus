@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends MongoRepository<Booking, String> {
@@ -22,6 +23,12 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     List<Booking> findByFacilityIdAndDateAndStatusIn(String facilityId, LocalDate date, Collection<BookingStatus> statuses);
 
-    // Used by the auto-cancel scheduler to find all approved bookings
+    // QR scan lookup
+    Optional<Booking> findByQrCode(String qrCode);
+
+    // Auto-cancel scheduler — all approved bookings
     List<Booking> findByStatus(BookingStatus status);
+
+    // Auto-cancel scheduler — today's approved, not checked in
+    List<Booking> findByDateAndStatusAndCheckedInFalse(LocalDate date, BookingStatus status);
 }

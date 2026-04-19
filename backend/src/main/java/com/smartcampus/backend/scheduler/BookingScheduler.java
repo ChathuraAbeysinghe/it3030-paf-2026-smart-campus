@@ -2,7 +2,9 @@ package com.smartcampus.backend.scheduler;
 
 import com.smartcampus.backend.model.Booking;
 import com.smartcampus.backend.model.BookingStatus;
+import com.smartcampus.backend.model.Notification;
 import com.smartcampus.backend.repository.BookingRepository;
+import com.smartcampus.backend.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,80 +16,73 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
- * BookingScheduler
+ * BookingScheduler — Auto-Cancel No Shows
  *
- * Runs every 60 seconds and automatically cancels APPROVED bookings
- * where the user did NOT check in within 15 minutes of the start time.
+ * Runs every 5 minutes.
+ * Cancels APPROVED bookings where no check-in was recorded
+ * within 30 minutes of the start time.
  *
- * This ensures that if the frontend is not open, auto-cancel still happens
- * reliably on the server side.
- *
- * IMPORTANT: Add @EnableScheduling to your main application class or config:
- *
- *   @SpringBootApplication
- *   @EnableScheduling          ← add this
- *   public class SmartCampusBackendApplication { ... }
+ * IMPORTANT: Add @EnableScheduling to SmartCampusBackendApplication.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class BookingScheduler {
 
-    private final BookingRepository bookingRepository;
+    private static final int GRACE_MINUTES = 30;
 
-    /**
-     * Runs every 60 seconds.
-     * Finds all APPROVED bookings that:
-     *   1. Have not been checked in (checkedIn == false / null)
-     *   2. Booking date is today and startTime + 15 minutes has passed, OR
-     *      booking date is in the past
-     * And cancels them, freeing the time slot.
-     */
-    @Scheduled(fixedRate = 60_000)
-    public void autoCancelExpiredBookings() {
-        List<Booking> approvedBookings = bookingRepository.findByStatus(BookingStatus.APPROVED)
-                .stream()
-                .filter(b -> !Boolean.TRUE.equals(b.getCheckedIn()))
-                .filter(b -> b.getDate() != null && b.getStartTime() != null)
-                .toList();
+    private final BookingRepository      bookingRepository;
+    private final NotificationRepository notificationRepository;
 
-        if (approvedBookings.isEmpty()) return;
+    @Scheduled(fixedDelay = 300_000) // every 5 minutes
+    public void autoCancelNoShows() {
+        LocalDate today   = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
 
-        LocalDate today = LocalDate.now();
-        LocalTime now   = LocalTime.now();
+        // Today's approved bookings not yet checked in
+        List<Booking> candidates = bookingRepository
+                .findByDateAndStatusAndCheckedInFalse(today, BookingStatus.APPROVED);
+
         int cancelledCount = 0;
 
-        for (Booking booking : approvedBookings) {
-            boolean shouldCancel = false;
+        for (Booking booking : candidates) {
+            if (booking.getStartTime() == null) continue;
 
-            // Past date — definitely expired
-            if (booking.getDate().isBefore(today)) {
-                shouldCancel = true;
-            }
-            // Today — check if 15-minute grace window has passed
-            else if (booking.getDate().equals(today)) {
-                LocalTime deadline = booking.getStartTime().plusMinutes(15);
-                if (now.isAfter(deadline)) {
-                    shouldCancel = true;
-                }
-            }
+            LocalTime deadline = booking.getStartTime().plusMinutes(GRACE_MINUTES);
 
-            if (shouldCancel) {
+            if (nowTime.isAfter(deadline)) {
                 booking.setStatus(BookingStatus.CANCELLED);
                 booking.setAdminNotes(
-                        "Auto-cancelled: no check-in within 15 minutes of start time ("
-                                + booking.getStartTime() + ")");
+                        "Auto-cancelled: no check-in within " + GRACE_MINUTES
+                        + " minutes of start time (" + booking.getStartTime() + ")");
+                booking.setAutoCancelled(true);
                 booking.setUpdatedAt(Instant.now());
                 bookingRepository.save(booking);
                 cancelledCount++;
-                log.info("Auto-cancelled booking {} (facility: {}, date: {}, startTime: {})",
-                        booking.getId(), booking.getFacilityId(),
-                        booking.getDate(), booking.getStartTime());
+
+                saveNotification(booking.getUserId(),
+                        "⚠️ Booking Auto-Cancelled",
+                        "Your booking was auto-cancelled because no check-in was recorded within "
+                        + GRACE_MINUTES + " minutes of the start time ("
+                        + booking.getStartTime() + ").");
+
+                log.info("Auto-cancelled booking {} (facility: {}, start: {})",
+                        booking.getId(), booking.getFacilityId(), booking.getStartTime());
             }
         }
 
         if (cancelledCount > 0) {
             log.info("Auto-cancel scheduler: cancelled {} booking(s)", cancelledCount);
+        }
+    }
+
+    private void saveNotification(String userId, String title, String message) {
+        try {
+            notificationRepository.save(Notification.builder()
+                    .userId(userId).title(title).message(message)
+                    .read(false).createdAt(Instant.now()).build());
+        } catch (Exception ex) {
+            log.warn("Failed to save notification: {}", ex.getMessage());
         }
     }
 }

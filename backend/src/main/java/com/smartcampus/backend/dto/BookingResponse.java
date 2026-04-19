@@ -21,6 +21,7 @@ public class BookingResponse {
 
     private String userId;
     private String userName;
+    private String userEmail;
 
     private LocalDate date;
     private LocalTime startTime;
@@ -34,9 +35,11 @@ public class BookingResponse {
     private String adminNotes;
     private String qrCode;
 
-    // QR Check-in fields
+    // ── Check-in ─────────────────────────────────────────────────
     private Boolean checkedIn;
     private Instant checkedInAt;
+    private String  checkedInBy;
+    private boolean autoCancelled;
 
     private Instant createdAt;
     private Instant updatedAt;
