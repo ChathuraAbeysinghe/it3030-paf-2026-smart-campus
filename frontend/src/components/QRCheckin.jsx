@@ -5,11 +5,10 @@
  * Check-in rules (matches backend):
  *   - Window opens:  startTime - 15 minutes
  *   - Window closes: startTime + 15 minutes  (after this → auto-cancelled)
- *   - User taps "Confirm Check-in" while showing the QR at the venue
+ *   - User shows the QR to staff/admin, and the booking updates once the QR is scanned or entered on the admin side
  *
  * States:
- *   idle      → QR visible, countdown running, button active
- *   loading   → API call in progress
+ *   idle      → QR visible, countdown running, waiting for staff scan
  *   success   → checked in
  *   already   → already checked in (show timestamp)
  *   notReady  → window not open yet / wrong date
@@ -17,7 +16,8 @@
  *   error     → API returned error, can retry
  * ─────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { bookingService } from '../services/api';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -48,26 +48,11 @@ function deadlineSeconds(startTime) {
   return (h * 60 + m + 15) * 60; // startTime + 15 min in seconds
 }
 
-function openSeconds(startTime) {
-  if (!startTime) return null;
-  const [h, m] = startTime.split(':').map(Number);
-  return (h * 60 + m - 15) * 60; // startTime - 15 min in seconds
-}
-
 function formatCountdown(secs) {
   if (secs == null || secs <= 0) return '0:00';
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-// Deterministic QR grid from qrCode string (9×9)
-function buildQRGrid(qrCode) {
-  const size = 9;
-  const seed = String(qrCode || '').split('').reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
-  return Array.from({ length: size * size }, (_, i) =>
-    (seed * (i + 1) * 17 + seed * i) % 3 !== 0
-  );
 }
 
 // ── Main Component ────────────────────────────────────────────────
@@ -77,21 +62,45 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
   const [errorMsg,    setErrorMsg]    = useState('');
   const [countdown,   setCountdown]   = useState(null);  // seconds until deadline
   const [checkinData, setCheckinData] = useState(null);
+  const successNotifiedRef = useRef(false);
+  const onCheckinSuccessRef = useRef(onCheckinSuccess);
 
   const startTime = booking?.startTime;
   const endTime   = booking?.endTime;
   const date      = booking?.date;
   const isCheckedIn = booking?.checkedIn;
 
+  useEffect(() => {
+    onCheckinSuccessRef.current = onCheckinSuccess;
+  }, [onCheckinSuccess]);
+
   // ── Determine initial status ──────────────────────────────────
   useEffect(() => {
+    if (!qrCode) {
+      setStatus('error');
+      setErrorMsg('QR code not available for this booking.');
+      setCountdown(null);
+      return;
+    }
+
     if (isCheckedIn) {
-      setStatus('already');
+      setStatus(successNotifiedRef.current ? 'success' : 'already');
+      setErrorMsg('');
+      setCountdown(null);
+      return;
+    }
+
+    if (successNotifiedRef.current) {
+      setStatus('success');
+      setErrorMsg('');
+      setCountdown(null);
       return;
     }
 
     if (!isToday(date)) {
       setStatus('notReady');
+      setErrorMsg('');
+      setCountdown(null);
       return;
     }
 
@@ -99,11 +108,53 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
     const openMins    = toMinutes(startTime) - 15;
     const deadlineMins = toMinutes(startTime) + 15;
 
-    if (nowMins < openMins)     { setStatus('notReady'); return; }
-    if (nowMins > deadlineMins) { setStatus('expired');  return; }
+    if (nowMins < openMins)     { setStatus('notReady'); setErrorMsg(''); setCountdown(null); return; }
+    if (nowMins > deadlineMins) { setStatus('expired');  setErrorMsg(''); setCountdown(null); return; }
 
+    setErrorMsg('');
     setStatus('idle');
-  }, [date, startTime, isCheckedIn]);
+  }, [date, startTime, isCheckedIn, qrCode]);
+
+  // ── Live check-in sync ────────────────────────────────────────
+  useEffect(() => {
+    if (!bookingId || ['success', 'already', 'expired', 'error'].includes(status)) return;
+
+    let active = true;
+
+    const refreshStatus = async () => {
+      try {
+        const data = await bookingService.getCheckinStatus(bookingId);
+        if (!active || !data) return;
+
+        if (data.checkedIn) {
+          const checkedInAt = data.checkedInAt || booking?.checkedInAt || null;
+          successNotifiedRef.current = true;
+          setCheckinData({ bookingId, checkedInAt });
+          setStatus('success');
+          setCountdown(null);
+          setErrorMsg('');
+          if (onCheckinSuccessRef.current) onCheckinSuccessRef.current({ bookingId, checkedInAt });
+          return;
+        }
+
+        if (data.status === 'CANCELLED') {
+          successNotifiedRef.current = false;
+          setCheckinData(null);
+          setStatus('expired');
+          setCountdown(null);
+        }
+      } catch {
+        // Keep the current UI and retry on the next poll.
+      }
+    };
+
+    refreshStatus();
+    const intervalId = setInterval(refreshStatus, 5000);
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
+  }, [bookingId, booking?.checkedInAt, status]);
 
   // ── Countdown tick ────────────────────────────────────────────
   useEffect(() => {
@@ -122,28 +173,6 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
     return () => clearInterval(id);
   }, [status, startTime, date]);
 
-  // ── Check-in action ───────────────────────────────────────────
-  const handleCheckin = useCallback(async () => {
-    if (!qrCode) {
-      setErrorMsg('QR code not available for this booking.');
-      setStatus('error');
-      return;
-    }
-    setStatus('loading');
-    setErrorMsg('');
-    try {
-      const data = await bookingService.checkin(bookingId, qrCode);
-      setCheckinData(data);
-      setStatus('success');
-      if (onCheckinSuccess) onCheckinSuccess(data);
-    } catch (err) {
-      setErrorMsg(err.message || 'Check-in failed. Please try again.');
-      setStatus('error');
-    }
-  }, [bookingId, qrCode, onCheckinSuccess]);
-
-  // ── Build QR display ─────────────────────────────────────────
-  const qrGrid = qrCode ? buildQRGrid(qrCode) : [];
   const countdownColor =
     countdown == null    ? '#34D399' :
     countdown < 60       ? '#F87171' :
@@ -173,7 +202,7 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
       {/* ── Not yet open / wrong date ─── */}
       {status === 'notReady' && (
         <>
-          <QRDisplay grid={qrGrid} code={qrCode} dim />
+          <QRDisplay code={qrCode} dim />
           <div style={{
             width: '100%', padding: '10px 14px', borderRadius: 10,
             background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)',
@@ -213,36 +242,18 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
 
       {/* ── Error — can retry ─── */}
       {status === 'error' && (
-        <>
-          <QRDisplay grid={qrGrid} code={qrCode} />
-          <div style={{
-            width: '100%', padding: '10px 14px', borderRadius: 10,
-            background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)',
-            fontSize: '0.82rem', color: '#F87171', textAlign: 'center',
-          }}>
-            ⚠️ {errorMsg}
-          </div>
-          <button className="btn-primary btn-glow" style={{ width: '100%' }} onClick={handleCheckin}>
-            Try Again
-          </button>
-        </>
-      )}
-
-      {/* ── Loading ─── */}
-      {status === 'loading' && (
-        <>
-          <QRDisplay grid={qrGrid} code={qrCode} dim />
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-            <span className="btn-spinner" style={{ display: 'inline-block', marginRight: 8 }} />
-            Confirming check-in…
-          </div>
-        </>
+        <Result
+          icon="⚠️"
+          color="#F87171"
+          title="QR Code Unavailable"
+          subtitle={errorMsg || 'This booking does not have a QR code yet.'}
+        />
       )}
 
       {/* ── Idle: window open, ready to check in ─── */}
       {status === 'idle' && (
         <>
-          <QRDisplay grid={qrGrid} code={qrCode} />
+          <QRDisplay code={qrCode} />
 
           {/* Countdown */}
           {countdown != null && (
@@ -284,17 +295,8 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
             </div>
           )}
 
-          {/* Check-in button */}
-          <button
-            className="btn-primary btn-glow"
-            style={{ width: '100%', marginTop: 4 }}
-            onClick={handleCheckin}
-          >
-            📱 Confirm Check-in
-          </button>
-
           <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
-            Show this QR code at the venue entrance, then tap the button to confirm your arrival.
+            Show this QR code to the admin or staff member. Check-in updates automatically once the code is scanned or entered on the admin side.
           </p>
         </>
       )}
@@ -303,25 +305,27 @@ export default function QRCheckin({ bookingId, qrCode, booking, onCheckinSuccess
 }
 
 // ── QR grid display ───────────────────────────────────────────────
-function QRDisplay({ grid, code, dim = false }) {
-  const SIZE = 9;
+function QRDisplay({ code, dim = false }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{
-        display: 'inline-grid',
-        gridTemplateColumns: `repeat(${SIZE}, 1fr)`,
-        gap: 2, padding: 14, borderRadius: 14,
-        background: dim ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.07)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12, borderRadius: 16,
+        background: '#fff',
+        border: '1px solid rgba(15,23,42,0.12)',
         opacity: dim ? 0.45 : 1,
         transition: 'opacity 0.3s',
       }}>
-        {grid.map((filled, i) => (
-          <div key={i} style={{
-            width: 11, height: 11, borderRadius: 2,
-            background: filled ? 'var(--text)' : 'transparent',
-          }} />
-        ))}
+        <QRCodeSVG
+          value={code || ''}
+          size={176}
+          level="M"
+          includeMargin={true}
+          bgColor="#FFFFFF"
+          fgColor="#0F172A"
+        />
       </div>
       <div style={{
         marginTop: 6, fontSize: '0.65rem', color: 'var(--text-muted)',

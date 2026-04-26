@@ -7,6 +7,7 @@ import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.repository.UserRepository;
 import com.smartcampus.backend.security.JwtService;
+import com.smartcampus.backend.service.LoginAuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -34,6 +35,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginAuditService loginAuditService;
 
     @Value("${app.admin-emails:}")
     private String adminEmailsConfig;
@@ -69,7 +71,8 @@ public class AuthController {
         }
 
         // Check if email already exists
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        String emailToRegister = request.getEmail() != null ? request.getEmail().trim() : "";
+        if (userRepository.findByEmailIgnoreCase(emailToRegister).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
         }
 
@@ -104,9 +107,11 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
+        Optional<User> userOptional = userRepository.findByEmailIgnoreCase(email);
 
         if (userOptional.isEmpty()) {
+            loginAuditService.logFailed(email, "PASSWORD", "Invalid credentials");
             return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
         }
 
@@ -120,6 +125,7 @@ public class AuthController {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            loginAuditService.logFailed(request.getEmail(), "PASSWORD", "Invalid credentials");
             return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
         }
 
@@ -137,6 +143,7 @@ public class AuthController {
             org.springframework.security.core.context.SecurityContextHolder.getContext());
 
         String token = jwtService.generateToken(user.getEmail());
+        loginAuditService.logSuccess(user.getEmail(), user.getRole().name(), "PASSWORD");
 
         return ResponseEntity.ok(Map.of(
                 "id",      user.getId(),
@@ -202,7 +209,7 @@ public class AuthController {
         }
 
         // Find user by email
-        Optional<User> userOptional = userRepository.findByEmail(userEmail);
+        Optional<User> userOptional = userRepository.findByEmailIgnoreCase(userEmail);
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }

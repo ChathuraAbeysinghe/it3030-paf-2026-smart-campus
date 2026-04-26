@@ -20,7 +20,7 @@ public class DataSeederConfig {
     CommandLineRunner seedDefaultAdmin() {
         return args -> {
             String adminEmail = "admin@sliit.lk";
-            if (userRepository.findByEmail(adminEmail).isEmpty()) {
+            if (userRepository.findByEmailIgnoreCase(adminEmail).isEmpty()) {
                 User admin = User.builder()
                         .name("Admin User")
                         .email(adminEmail)

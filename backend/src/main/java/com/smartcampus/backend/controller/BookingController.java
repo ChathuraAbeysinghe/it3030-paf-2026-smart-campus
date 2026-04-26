@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -132,6 +133,20 @@ public class BookingController {
 
         User actor = currentUserService.resolveCurrentUser(principal, request);
         return bookingService.cancel(actor, id);
+    }
+
+    /*
+     Delete a booking — owner/admin can remove non-approved bookings
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable String id,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+
+        User actor = currentUserService.resolveCurrentUser(principal, request);
+        bookingService.delete(actor, id);
+        return ResponseEntity.noContent().build();
     }
 
     /*

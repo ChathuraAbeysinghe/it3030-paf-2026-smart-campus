@@ -309,10 +309,10 @@ export default function ManageResources() {
 
   var columns = [
     {
-      key: "type",
+      key: "visual",
       label: "Visual",
-      render: function (value) {
-        var visual = getResourceVisual(value);
+      render: function (_value, row) {
+        var visual = getResourceVisual(row.type);
         return (
           <div className="rm-resource-mini">
             <img src={visual.image} alt={visual.label} className="rm-resource-mini-image" />
@@ -382,9 +382,6 @@ export default function ManageResources() {
           <h1>Manage Resources</h1>
           <p>Track hall IDs, status, and available facilities in one place.</p>
         </div>
-        <button className="btn-primary" style={{ width: "auto" }} onClick={openCreate}>
-          Add Resource
-        </button>
       </div>
 
       <div className="stats-grid animate-in" style={{ animationDelay: "0.08s" }}>

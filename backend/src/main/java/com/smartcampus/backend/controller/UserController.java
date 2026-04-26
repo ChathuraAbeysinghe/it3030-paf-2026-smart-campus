@@ -36,7 +36,7 @@ public class UserController {
         // Try OAuth2 first
         if (principal != null) {
             String email = principal.getAttribute("email");
-            Optional<User> userOptional = userRepository.findByEmail(email);
+            Optional<User> userOptional = userRepository.findByEmailIgnoreCase(email);
 
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of("error", "User not found"));

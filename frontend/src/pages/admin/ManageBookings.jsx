@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { bookingService } from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
 import BookingApprovalPanel from '../../components/BookingApprovalPanel';
@@ -104,6 +104,17 @@ export default function ManageBookings() {
     notify('Booking cancelled.');
   };
 
+  const handleCheckin = async (id, qrCode) => {
+    const data = await bookingService.checkin(id, qrCode);
+    setBookings(prev => prev.map(b => (
+      b.id === data.bookingId
+        ? { ...b, checkedIn: true, checkedInAt: data.checkedInAt }
+        : b
+    )));
+    notify('Check-in successful!');
+    return data;
+  };
+
   // ── Filtering ─────────────────────────────────────────────────
   const filtered = useMemo(() => {
     let rows = bookings;
@@ -174,7 +185,7 @@ export default function ManageBookings() {
           {[
             { key: 'table',   label: '📋 Table View' },
             { key: 'panel',   label: '✅ Approval Panel', badge: pendingBookings.length },
-            { key: 'checkin', label: '📱 Check-in Status', badge: notCheckedIn.length > 0 ? notCheckedIn.length : 0, badgeColor: '#FBBF24' },
+            { key: 'checkin', label: 'Check-in Status', badge: notCheckedIn.length > 0 ? notCheckedIn.length : 0, badgeColor: '#FBBF24' },
           ].map(v => (
             <button
               key={v.key}
@@ -243,7 +254,7 @@ export default function ManageBookings() {
       </div>
 
       {/* ── Date selector (only for table view) ───────────────── */}
-      {view !== 'panel' && (
+      {view === 'table' && (
         <div className="glass-card" style={{ padding: '12px 16px', marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>
@@ -322,6 +333,7 @@ export default function ManageBookings() {
           todayApproved={todayApproved}
           checkedInCount={checkedInCount}
           today={today}
+          onCheckin={handleCheckin}
         />
       )}
 
@@ -419,7 +431,7 @@ export default function ManageBookings() {
 
 // ── Check-in Status View (admin) ──────────────────────────────────
 
-function CheckinStatusView({ todayApproved, checkedInCount, today }) {
+function CheckinStatusView({ todayApproved, checkedInCount, today, onCheckin }) {
   const total = todayApproved.length;
 
   if (total === 0) {
@@ -557,14 +569,8 @@ function CheckinStatusView({ todayApproved, checkedInCount, today }) {
                   </span>
                 )}
 
-                {!b.checkedIn && isWindow && (
-                  <span style={{ fontSize: '0.7rem', color: '#FBBF24' }}>
-                    Closes at {(() => {
-                      const [h, m] = b.startTime.split(':').map(Number);
-                      const d = new Date(); d.setHours(h, m + 15, 0);
-                      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    })()}
-                  </span>
+                {!b.checkedIn && !isExpired && (
+                  <AdminCheckinControl booking={b} onCheckin={onCheckin} isWindow={isWindow} />
                 )}
 
                 {b.adminNotes && (
@@ -577,6 +583,72 @@ function CheckinStatusView({ todayApproved, checkedInCount, today }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function AdminCheckinControl({ booking, onCheckin, isWindow }) {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submitCheckin = async () => {
+    const qrCode = code.trim();
+    if (!qrCode) {
+      setError('Enter the scanned QR code.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      await onCheckin(booking.id, qrCode);
+      setCode('');
+    } catch (err) {
+      setError(err.message || 'Check-in failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 6, width: '100%', maxWidth: 260 }}>
+      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: 4, textAlign: 'right' }}>
+        Scan or paste QR code to check in
+      </div>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <input
+          className="form-input"
+          style={{ flex: '1 1 150px', minWidth: 150, fontSize: '0.78rem', padding: '6px 10px' }}
+          placeholder="Paste scanned QR code"
+          value={code}
+          onChange={e => setCode(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && isWindow) {
+              e.preventDefault();
+              submitCheckin();
+            }
+          }}
+        />
+        <button
+          className="btn-sm btn-sm--success"
+          onClick={submitCheckin}
+          disabled={loading || !isWindow}
+        >
+          {loading ? 'Checking…' : isWindow ? 'Check in' : 'Not started'}
+        </button>
+      </div>
+      {!isWindow && (
+        <div style={{ marginTop: 4, fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'right' }}>
+          Check-in opens 15 minutes before the booking start time.
+        </div>
+      )}
+      {error && (
+        <div style={{ marginTop: 4, fontSize: '0.7rem', color: '#F87171', textAlign: 'right' }}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,46 @@
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{0}: checkout: moving from don't-do-any-chenges to my-dev-previouseMain(now)
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{1}: checkout: moving from working-previous-main(now) to don't-do-any-chenges
+[33m5e22e01[m[33m ([m[1;32mworking-previous-main(now)[m[33m)[m HEAD@{2}: commit: last
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{3}: reset: moving to e5f3f93
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{4}: reset: moving to e6d12d3
+[33mf8a343b[m[33m ([m[1;31morigin/working-previous-main(now)[m[33m)[m HEAD@{5}: checkout: moving from feature/booking-module to working-previous-main(now)
+[33md8c8c07[m[33m ([m[1;32mfeature/booking-module[m[33m)[m HEAD@{6}: checkout: moving from Old-booking-auto-cancel-and-QRcode to feature/booking-module
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{7}: checkout: moving from main to Old-booking-auto-cancel-and-QRcode
+[33m37347b1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{8}: checkout: moving from don't-do-any-chenges to main
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{9}: checkout: moving from Old-booking-auto-cancel-and-QRcode to don't-do-any-chenges
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{10}: checkout: moving from main to Old-booking-auto-cancel-and-QRcode
+[33m37347b1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{11}: checkout: moving from don't-do-any-chenges to main
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{12}: checkout: moving from my-dev-previouseMain(now) to don't-do-any-chenges
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{13}: checkout: moving from main to my-dev-previouseMain(now)
+[33m37347b1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{14}: checkout: moving from my-dev-previouseMain(now) to main
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{15}: checkout: moving from Old-booking-auto-cancel-and-QRcode to my-dev-previouseMain(now)
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{16}: checkout: moving from working-previous-main(now) to Old-booking-auto-cancel-and-QRcode
+[33mf8a343b[m[33m ([m[1;31morigin/working-previous-main(now)[m[33m)[m HEAD@{17}: checkout: moving from main to working-previous-main(now)
+[33m37347b1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{18}: commit: new
+[33mfbc7e6c[m HEAD@{19}: checkout: moving from working-previous-main(now) to main
+[33mf8a343b[m[33m ([m[1;31morigin/working-previous-main(now)[m[33m)[m HEAD@{20}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{21}: checkout: moving from Old-booking-auto-cancel-and-QRcode to working-previous-main(now)
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{22}: checkout: moving from working-previous-main(now) to Old-booking-auto-cancel-and-QRcode
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{23}: checkout: moving from Old-booking-auto-cancel-and-QRcode to working-previous-main(now)
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{24}: checkout: moving from working-previous-main(now) to Old-booking-auto-cancel-and-QRcode
+[33me6d12d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmy-dev-previouseMain(now)[m[33m, [m[1;31morigin/my-dev-previouseMain(now)[m[33m, [m[1;31morigin/don't-do-any-chenges[m[33m, [m[1;32mdon't-do-any-chenges[m[33m)[m HEAD@{25}: checkout: moving from Old-booking-auto-cancel-and-QRcode to working-previous-main(now)
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{26}: reset: moving to HEAD
+[33me5f3f93[m[33m ([m[1;31morigin/Old-booking-auto-cancel-and-QRcode[m[33m, [m[1;32mOld-booking-auto-cancel-and-QRcode[m[33m)[m HEAD@{27}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m6dbae5e[m HEAD@{28}: reset: moving to HEAD
+[33m6dbae5e[m HEAD@{29}: commit: Add auto check-in flow and qrcode.react
+[33m19c7fc4[m HEAD@{30}: checkout: moving from working-previous-main(now) to Old-booking-auto-cancel-and-QRcode
+[33m6bd3938[m HEAD@{31}: reset: moving to HEAD
+[33m6bd3938[m HEAD@{32}: checkout: moving from feature/booking-module to working-previous-main(now)
+[33md8c8c07[m[33m ([m[1;32mfeature/booking-module[m[33m)[m HEAD@{33}: checkout: moving from working-previous-main(now) to feature/booking-module
+[33m6bd3938[m HEAD@{34}: checkout: moving from feature/booking-module to working-previous-main(now)
+[33md8c8c07[m[33m ([m[1;32mfeature/booking-module[m[33m)[m HEAD@{35}: commit: Update Vite deps metadata and source maps
+[33me61ab9c[m HEAD@{36}: checkout: moving from working-previous-main(now) to feature/booking-module
+[33m6bd3938[m HEAD@{37}: commit: Add booking deletion endpoint
+[33m19c7fc4[m HEAD@{38}: checkout: moving from feature/booking-module to working-previous-main(now)
+[33m9d71c25[m HEAD@{39}: reset: moving to HEAD
+[33m9d71c25[m HEAD@{40}: checkout: moving from conflict-resolve to feature/booking-module
+[33mea83736[m[33m ([m[1;32mconflict-resolve[m[33m)[m HEAD@{41}: commit: downlod files
+[33m3989c52[m[33m ([m[1;31mupstream/conflict-resolve[m[33m)[m HEAD@{42}: checkout: moving from main-deleted-dueto-error(working-fine) to conflict-resolve
+[33m14d1859[m[33m ([m[1;31morigin/main-deleted-dueto-error(working-fine)[m[33m, [m[1;31morigin/DB-conect-fixe[m[33m, [m[1;32mmain-deleted-dueto-error(working-fine)[m[33m)[m HEAD@{43}: checkout: moving from working-previous-main(now) to main-deleted-dueto-error(working-fine)
+[33m19c7fc4[m HEAD@{44}: reset: moving to HEAD
+[33m19c7fc4[m HEAD@{45}: checkout: moving from booking-QR-chekin-us

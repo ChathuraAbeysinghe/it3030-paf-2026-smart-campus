@@ -723,6 +723,32 @@ select.form-input option {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
+.btn-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: rgba(36, 41, 47, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: #f0f6fc;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  margin-top: 10px;
+}
+
+.btn-github:hover {
+  background: rgba(36, 41, 47, 0.95);
+  border-color: rgba(240, 246, 252, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
 .btn-spinner {
   width: 18px;
   height: 18px;
@@ -933,7 +959,7 @@ select.form-input option {
 }
 
 .user-main {
-  padding: 32px;
+  padding: 100px 32px 32px 32px;
   max-width: 1200px;
   margin: 0 auto;
 }

@@ -21,7 +21,7 @@ public class CurrentUserService {
         if (principal != null) {
             String email = principal.getAttribute("email");
             if (email != null) {
-                return userRepository.findByEmail(email)
+                return userRepository.findByEmailIgnoreCase(email)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
             }
         }
@@ -39,7 +39,7 @@ public class CurrentUserService {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             if (email != null && !"anonymousUser".equalsIgnoreCase(email)) {
-                return userRepository.findByEmail(email)
+                return userRepository.findByEmailIgnoreCase(email)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
             }
         }

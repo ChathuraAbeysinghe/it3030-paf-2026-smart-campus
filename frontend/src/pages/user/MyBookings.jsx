@@ -118,6 +118,16 @@ export default function MyBookings() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this booking permanently?')) return;
+    try {
+      await bookingService.delete(id);
+      setBookings(prev => prev.filter(b => b.id !== id));
+    } catch (err) {
+      setError(err.message || 'Failed to delete booking');
+    }
+  };
+
   const handleEdit = (booking) => {
     setEditingBooking(booking);
     setStep('edit');
@@ -157,7 +167,17 @@ export default function MyBookings() {
     <div className="page-content animate-in">
 
       {/* ── Header ────────────────────────────────────────────── */}
-      <div className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+      <div
+        className="content-header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 12,
+          marginTop: step === 'list' ? 40 : 0,
+        }}
+      >
         <div>
           <h1>My Bookings</h1>
           <p>Manage your facility and resource booking requests.</p>
@@ -335,6 +355,7 @@ export default function MyBookings() {
                   today={today}
                   onEdit={handleEdit}
                   onCancel={handleCancel}
+                  onDelete={handleDelete}
                   onQR={() => setQrModal({ ...b })}
                 />
               ))}
@@ -388,7 +409,7 @@ export default function MyBookings() {
 
 // ── Single Booking Card ───────────────────────────────────────────
 
-function BookingCard({ booking: b, today, onEdit, onCancel, onQR }) {
+function BookingCard({ booking: b, today, onEdit, onCancel, onDelete, onQR }) {
   const dateObj = b.date ? new Date(b.date + 'T00:00:00') : null;
   const day     = dateObj ? dateObj.getDate() : '--';
   const month   = dateObj ? dateObj.toLocaleString('default', { month: 'short' }) : '';
@@ -556,6 +577,12 @@ function BookingCard({ booking: b, today, onEdit, onCancel, onQR }) {
           {(b.status === 'PENDING' || b.status === 'APPROVED') && (
             <button className="btn-sm btn-sm--danger" onClick={() => onCancel(b.id)}>
               Cancel
+            </button>
+          )}
+
+          {(b.status === 'PENDING' || b.status === 'REJECTED' || b.status === 'CANCELLED') && (
+            <button className="btn-sm btn-sm--danger" onClick={() => onDelete(b.id)}>
+              Delete
             </button>
           )}
         </div>

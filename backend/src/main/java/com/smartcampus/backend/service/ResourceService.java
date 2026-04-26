@@ -78,6 +78,14 @@ public class ResourceService {
     public Resource create(ResourceRequest request) {
         validateAvailabilityWindow(request);
 
+        String hallId = buildHallId(
+            request.getBuildingName(),
+            request.getBlock(),
+            request.getFloor(),
+            request.getHallNumber()
+        );
+        ensureHallIdUniqueForCreate(hallId);
+
         Resource resource = new Resource();
         applyRequest(resource, request);
 
@@ -90,6 +98,14 @@ public class ResourceService {
 
     public Resource update(String id, ResourceRequest request) {
         validateAvailabilityWindow(request);
+
+        String hallId = buildHallId(
+            request.getBuildingName(),
+            request.getBlock(),
+            request.getFloor(),
+            request.getHallNumber()
+        );
+        ensureHallIdUniqueForUpdate(hallId, id);
 
         Resource existing = getByIdOrThrow(id);
         applyRequest(existing, request);
@@ -141,7 +157,7 @@ public class ResourceService {
         resource.setType(request.getType());
         resource.setCapacity(request.getCapacity());
         resource.setLocation(request.getLocation().trim());
-        resource.setDescription(request.getDescription().trim());
+        resource.setDescription(request.getDescription() == null ? "" : request.getDescription().trim());
         resource.setAvailableFrom(request.getAvailableFrom().trim());
         resource.setAvailableTo(request.getAvailableTo().trim());
 
@@ -220,5 +236,17 @@ public class ResourceService {
             return false;
         }
         return source.toLowerCase(Locale.ROOT).contains(target.toLowerCase(Locale.ROOT));
+    }
+
+    private void ensureHallIdUniqueForCreate(String hallId) {
+        if (resourceRepository.existsByHallId(hallId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Resource with the same hall ID already exists");
+        }
+    }
+
+    private void ensureHallIdUniqueForUpdate(String hallId, String id) {
+        if (resourceRepository.existsByHallIdAndIdNot(hallId, id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Resource with the same hall ID already exists");
+        }
     }
 }

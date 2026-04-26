@@ -207,6 +207,18 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    public void delete(User actor, String id) {
+        Booking booking = getByIdOrThrow(id);
+        ensureOwnerOrAdmin(actor, booking);
+
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Approved bookings must be cancelled before deletion");
+        }
+
+        bookingRepository.deleteById(id);
+    }
+
     public List<BookingResponse> getFacilityConflicts(String facilityId, LocalDate date) {
         if (facilityId == null || facilityId.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Facility ID is required");

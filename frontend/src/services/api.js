@@ -365,6 +365,27 @@ export const bookingService = {
     }
   },
 
+  delete: async (id) => {
+    try {
+      await api.delete('/api/bookings/' + id);
+    } catch {
+      var booking = mockBookings.find(function (b) { return b.id === id; });
+      if (!booking) throw new Error('Booking not found');
+
+      var currentUser = getStoredUser() || {};
+      if (currentUser.role !== 'ADMIN' && booking.userId !== currentUser.id) {
+        throw new Error('You do not have permission to access this booking');
+      }
+
+      if (booking.status === 'APPROVED') {
+        throw new Error('Approved bookings must be cancelled before deletion');
+      }
+
+      mockBookings = mockBookings.filter(function (b) { return b.id !== id; });
+      persistMockBookings();
+    }
+  },
+ 
   getFacilityConflicts: async (facilityId, date) => {
     try {
       var rows = (await api.get('/api/bookings/facility/' + facilityId + '/conflicts', { params: { date: date } })).data;

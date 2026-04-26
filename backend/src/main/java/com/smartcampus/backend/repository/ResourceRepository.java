@@ -7,4 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ResourceRepository extends MongoRepository<Resource, String> {
+	boolean existsByHallId(String hallId);
+
+	boolean existsByHallIdAndIdNot(String hallId, String id);
 }

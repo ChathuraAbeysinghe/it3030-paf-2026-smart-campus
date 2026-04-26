@@ -3,7 +3,6 @@ import { resourceService } from "../../services/api";
 import { formatResourceType, getResourceVisual } from "../../components/resource/resourceVisuals";
 import ResourceDetailsModal from "../../components/resource/ResourceDetailsModal";
 import "../../components/resource/resource-management.css";
-import "./modern-pages.css";
 
 var RESOURCE_TYPES = [
   "ALL",
@@ -29,6 +28,18 @@ export default function Resources() {
   var search = stateSearch[0];
   var setSearch = stateSearch[1];
 
+  var stateLocation = useState("");
+  var location = stateLocation[0];
+  var setLocation = stateLocation[1];
+
+  var stateMinCapacity = useState("");
+  var minCapacity = stateMinCapacity[0];
+  var setMinCapacity = stateMinCapacity[1];
+
+  var stateMaxCapacity = useState("");
+  var maxCapacity = stateMaxCapacity[0];
+  var setMaxCapacity = stateMaxCapacity[1];
+
   var stateLoading = useState(false);
   var loading = stateLoading[0];
   var setLoading = stateLoading[1];
@@ -43,14 +54,17 @@ export default function Resources() {
 
   useEffect(function () {
     loadResources();
-  }, [filter, search]);
+  }, [filter, search, location, minCapacity, maxCapacity]);
 
   async function loadResources() {
     setLoading(true);
     try {
       var data = await resourceService.getAll({
         type: filter,
-        search: search.trim()
+        search: search.trim(),
+        location: location.trim() || undefined,
+        minCapacity: minCapacity === "" ? undefined : Number(minCapacity),
+        maxCapacity: maxCapacity === "" ? undefined : Number(maxCapacity)
       });
 
       var list = Array.isArray(data) ? data : [];
@@ -65,13 +79,13 @@ export default function Resources() {
   }
 
   return (
-    <div className="page-content animate-in user-modern-page user-modern-resources">
+    <div className="page-content animate-in">
       <div className="content-header">
         <h1>Campus Resources</h1>
         <p>View available campus facilities and assets.</p>
       </div>
 
-      <div className="filter-bar glass-card modern-panel">
+      <div className="filter-bar glass-card">
         <div className="filter-search">
           <span className="form-input-icon">Search</span>
           <input
@@ -81,6 +95,47 @@ export default function Resources() {
             onChange={function (e) { setSearch(e.target.value); }}
             className="form-input"
           />
+        </div>
+
+        <div className="filter-search">
+          <span className="form-input-icon">Location</span>
+          <input
+            type="text"
+            placeholder="Filter by location or hall ID"
+            value={location}
+            onChange={function (e) { setLocation(e.target.value); }}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-row" style={{ marginTop: 8 }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Min Capacity</label>
+            <div className="form-input-wrapper">
+              <input
+                type="number"
+                min="1"
+                className="form-input"
+                value={minCapacity}
+                onChange={function (e) { setMinCapacity(e.target.value); }}
+                placeholder="Any"
+              />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Max Capacity</label>
+            <div className="form-input-wrapper">
+              <input
+                type="number"
+                min="1"
+                className="form-input"
+                value={maxCapacity}
+                onChange={function (e) { setMaxCapacity(e.target.value); }}
+                placeholder="Any"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="filter-chips">
@@ -99,15 +154,15 @@ export default function Resources() {
       </div>
 
       {error ? (
-        <div className="modern-inline-card modern-inline-card--error" style={{ marginBottom: 16 }}>
+        <div className="glass-card" style={{ marginBottom: 16, color: "#F87171" }}>
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="modern-inline-card modern-inline-card--info">Loading resources...</div>
+        <div className="glass-card" style={{ padding: 20 }}>Loading resources...</div>
       ) : resources.length === 0 ? (
-        <div className="modern-inline-card modern-inline-card--info">No resources found.</div>
+        <div className="glass-card" style={{ padding: 20 }}>No resources found.</div>
       ) : (
         <div className="rm-card-grid">
           {resources.map(function (resource) {
@@ -117,7 +172,7 @@ export default function Resources() {
 
             return (
               <div
-                className="glass-card rm-resource-card modern-panel modern-resource-card"
+                className="glass-card rm-resource-card"
                 key={resource.id}
                 onClick={function () { setSelectedResource(resource); }}
                 style={{

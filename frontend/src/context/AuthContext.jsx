@@ -116,6 +116,10 @@ export function AuthProvider({ children }) {
     window.location.href = `${API_BASE}/oauth2/authorization/google`;
   };
 
+  const loginWithGitHub = () => {
+    window.location.href = `${API_BASE}/oauth2/authorization/github`;
+  };
+
   const loginManual = async (email, password) => {
     const normalizedEmail = String(email || '').trim().toLowerCase();
 
@@ -196,7 +200,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      loginWithGoogle, loginManual, register,
+      loginWithGoogle, loginWithGitHub, loginManual, register,
       logout, fetchUser, changePassword,
     }}>
       {children}
